@@ -1,0 +1,270 @@
+
+;; Get apprx age of a tree of known DBH
+to-report get-age-from-dbh
+
+  let g item (species - 1) g-jabowa
+  let maxdbh item (species - 1) max-dbh
+  let maxheight item (species - 1) max-hgt
+  let b2 item (species - 1) b2-jabowa
+  let b3 item (species - 1) b3-jabowa
+
+
+  let a 0
+  let est-dbh 0.01 + random-float 0.01
+  let l-height height
+
+
+  while [est-dbh <= dbh]
+  [
+    let dbh-increment ( est-dbh * g * ( 1 - ( est-dbh * l-height ) / (maxdbh * maxheight) ) ) / ( 2.74 + 3 * b2 * est-dbh - 4 * b3 * est-dbh ^ 2 )
+    set l-height 1.37  + (b2 * dbh) - (b3 * dbh * dbh)
+
+    set est-dbh est-dbh + (dbh-increment)
+    set a a + random-normal 0.8 0.1
+  ]
+
+  report round a + 1
+end
+
+;; Get apprx age of a tree of known hgt (this is for growth-form 2:: monocots)
+to-report get-age-from-hgt
+
+
+  let est-age 0
+  let est-hgt 0.0 + random-float 0.01
+
+  while [est-hgt <= height]
+  [
+    let hgt-increment a-tf-hgt * exp(b-tf-hgt * est-hgt)
+
+    set est-hgt est-hgt + (hgt-increment)
+    set est-age est-age + random-normal 0.8 0.1
+  ]
+
+  report round est-age + 1
+end
+
+;; Get apprx age of a tree of known hgt (this is for growth-form 2:: monocots)
+to-report get-age-from-hgt-test [ch]
+
+  let est-age 0
+  let est-hgt 0.0 + random-float 0.01
+
+  while [est-hgt <= ch]
+  [
+    let hgt-increment a-tf-hgt * exp(b-tf-hgt * est-hgt)
+
+    set est-hgt est-hgt + (hgt-increment)
+    set est-age est-age + random-normal 0.8 0.1
+  ]
+
+  report round est-age + 1
+
+end
+
+
+
+;; update a list containing the abundance (cell counts) of all species
+to update-abundances
+  let n [species] of patches
+   ;set abundances (map [occurrences ?1 n] spp-list)
+   set abundances (map [i -> (occurrences i n)] spp-list)
+end
+
+to update-species-dbh
+     foreach spp-list
+     [
+       spp-id ->
+         ifelse item (spp-id - 1) abundances > 0
+         [
+            set dbh-by-species replace-item (spp-id - 1) dbh-by-species (precision mean [dbh] of patches with [species = spp-id] 3 )
+         ]
+         [
+            set dbh-by-species replace-item (spp-id - 1) dbh-by-species 0
+         ]
+     ]
+
+
+end
+
+
+to update-species-age
+
+     foreach spp-list
+     [
+       spp-id ->
+         ifelse item (spp-id - 1) abundances > 0
+         [
+            set age-by-species replace-item (spp-id - 1) age-by-species (precision max [age] of patches with [species = spp-id] 0 )
+         ]
+         [
+            set age-by-species replace-item (spp-id - 1) age-by-species 0
+         ]
+     ]
+end
+
+
+to update-species-mean-age
+
+     foreach spp-list
+     [
+        spp-id ->
+          ifelse item (spp-id - 1) abundances > 0
+          [
+            set mean-age-by-species replace-item (spp-id - 1) mean-age-by-species (precision mean [age] of patches with [species = spp-id] 3 )
+          ]
+          [
+            set mean-age-by-species replace-item (spp-id - 1) mean-age-by-species 0
+          ]
+     ]
+end
+
+to update-species-hgt
+     foreach spp-list
+     [
+        spp-id ->
+          ifelse item (spp-id - 1) abundances > 0
+          [
+            set hgt-by-species replace-item (spp-id - 1) hgt-by-species (precision mean [height] of patches with [species = spp-id] 3 )
+          ]
+          [
+            set hgt-by-species replace-item (spp-id - 1) hgt-by-species 0
+          ]
+     ]
+end
+
+to update-species-mean-hgt
+
+     foreach spp-list
+     [
+     spp-id ->
+    ifelse item (spp-id - 1) abundances > 0
+       [
+         set mean-hgt-by-species replace-item (spp-id - 1) mean-hgt-by-species (precision mean [height] of patches with [species = spp-id] 3 )
+       ]
+       [
+         set mean-hgt-by-species replace-item (spp-id - 1) mean-hgt-by-species 0
+       ]
+     ]
+end
+
+
+
+to update-species-BA
+  ;;  report sum [(dbh / 2) ^ 2 * pi] of patches with [species != 0] / (count patches / (10000 / patch-grain ^ 2) )
+
+  foreach spp-list
+  [
+  spp-id ->
+    ifelse item (spp-id - 1) abundances > 0
+      [
+      set BA-by-species replace-item (spp-id - 1) BA-by-species ( precision ( (sum [(dbh / 2) ^ 2 * pi] of patches with [species = spp-id]) / (count patches / (10000 / patch-grain ^ 2))) 3)
+    ]
+     [
+     set BA-by-species replace-item (spp-id - 1) BA-by-species 0
+       ]
+     ]
+end
+
+
+
+;; This is distance-weighted such that cells in-radius (i-1) have to be hgt gt than item i in crit-height
+to-report get-nhb-height
+
+  let focal-height height    ;; height of patch requesting updated nhb height
+  let idx 0
+  let crit-height (list 0 4 8 12 16 20 24 28 32)
+  let shading-heights []
+  let shade-trees nobody
+
+  ;; this loops over the annuli, moving outwards (nhb-set is a list of patch-sets owned by each patch)
+  foreach nhb-set
+  [
+    i ->
+      set shade-trees i with [height > (item idx crit-height) and height >= focal-height]
+      set shading-heights sentence shading-heights ([height] of shade-trees)
+
+      set idx idx + 1
+  ]
+
+  ifelse length shading-heights > 0
+    [ report mean shading-heights ] ;
+    [ report 0 ]
+end
+
+
+;; Calculate the edge effect (0,1) at distance from edge
+to-report edge-effect [d]
+  report edge-b1 * exp(- edge-b2 * d) + edge-b0
+end
+
+
+;; Get distance from any cell to the edge
+to-report get-edge-distance
+   let x-distance min (list (pxcor - min-pxcor) (max-pxcor - pxcor))
+   let y-distance min (list (pycor - min-pycor) (max-pxcor - pycor))
+
+   report min (list x-distance y-distance)
+
+end
+
+
+
+to-report ba-per-ha
+    report sum [(dbh / 2) ^ 2 * pi] of patches with [species != 0 and species != 7] / (count patches / (10000 / patch-grain ^ 2) )
+
+end
+
+to-report bank-tawa
+report (sum [item 0 seedlings] of patches + sum [item 0 saplings] of patches) / 1000
+
+end
+
+to-report bank-pigeonwood
+report (sum [item 1 seedlings] of patches + sum [item 1 saplings] of patches) / 1000
+
+end
+
+to-report bank-pukatea
+report (sum [item 2 seedlings] of patches + sum [item 2 saplings] of patches) / 1000
+
+end
+
+to-report bank-kawakawa
+report (sum [item 3 seedlings] of patches + sum [item 3 saplings] of patches) / 1000
+end
+
+to-report bank-mahoe
+report (sum [item 4 seedlings] of patches + sum [item 4 saplings] of patches) / 1000
+end
+
+to-report bank-rimu
+report (sum [item 5 seedlings] of patches + sum [item 5 saplings] of patches) / 1000
+end
+
+to-report get-crown-width-from-dbh [d]
+  ;; this is a simplified allometric relationship from SORTIE-NZ
+  set d d * 100                           ;; m to cm conversion
+  report 0.284 * (d ^ 0.654)
+end
+
+
+;; Reporter:: local light (shade) environment (see Dislich et al.) from 0 (high) to 1 (low)
+;; TO DO - may needs some thought
+to-report get-light-env [c-hgt]
+  let l nhb-height / c-hgt     ;; col-hgt is the hrt in Dislich et al. - here assumed to be max max-hgt across all spp
+  if l > 1 [set l 1]
+
+  report l
+end
+
+
+
+to update-biometry
+  update-species-age
+  update-species-dbh
+  update-species-hgt
+  update-species-mean-age
+  update-species-mean-hgt
+  ;update-species-BA
+end

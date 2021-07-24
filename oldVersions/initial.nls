@@ -1,0 +1,78 @@
+;; this reads text files to lists
+to read-params-from-file [fname]
+  carefully [ ;; in case of file read errors
+    file-open fname
+    ;; make list of variable names from the first comma-separated line
+    let varnames split-string-to-list file-read-line ","
+    print varnames
+    while [not file-at-end?] 
+    [
+      ;; make a list of values from the next comma-separated line in the file
+      let values split-string-to-list file-read-line ","
+        
+      ;; make the var-value pairs into a list of set commands
+      let var-value-set-commands (map [[var val] -> (word "set " var " " val)] varnames values)
+        
+      foreach but-first var-value-set-commands 
+      [ ;; run the set commands
+        [cmd] -> run cmd ; show cmd
+      ]
+    ]
+    file-close
+  ]
+  [
+    show (word "Error reading file " fname)
+    file-close
+  ]
+
+end
+
+to read-params-list-from-file [fname]
+  carefully [ ;; in case of file read errors
+    file-open fname
+    ;; make list of variable names from the first comma-separated line
+    let varnames split-string-to-list file-read-line ","
+    print varnames
+    while [not file-at-end?] [
+      ;;create-turtles 1 [
+        ;; make a list of values from the next comma-separated line in the file
+        let values split-string-to-list file-read-line ","
+        ;;show values
+        ;; make the var-value pairs into a list of set commands
+      let var-value-set-commands (map [ [var val] -> (word "set " var " lput " val " " var)] varnames values)
+        ;;show var-value-set-commands
+        
+        foreach but-first var-value-set-commands [ ;; run the set commands
+          ;;show ?
+          cmd -> run cmd ; show cmd
+        ]
+
+      ;;]
+    ]
+    file-close
+  ]
+  [
+    show (word "Error reading file " fname)
+    file-close
+  ]
+
+end
+
+;; splits a string s at the splitter separator (usually ",")
+;; and reports a list of strings
+to-report split-string-to-list [s splitter]
+  let lst []
+  let idx 0
+  while [s != ""] [
+    let srch position splitter s
+    ifelse is-boolean? srch [
+      set lst lput s lst
+      set s ""
+    ]
+    [
+      set lst lput (substring s idx srch) lst
+      set s substring s (srch + 1) (length s)
+    ]
+  ]
+  report lst
+end

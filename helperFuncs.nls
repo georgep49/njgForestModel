@@ -1,0 +1,63 @@
+
+
+;; AUXILLARY FUNCTIONS BELOW HERE...
+to-report lottery [bankList]
+
+  ;; -999 is a dummy number to report that a species was not returned (i.e., the bank was empty)
+  let lotteryRepl -999
+
+  if sum bankList > 0
+  [
+   let scaleBank (rescaleListToProbs bankList true)
+   set lotteryRepl ( selectReplacement scaleBank)
+  ]
+
+  report lotteryRepl
+end
+
+to-report rescaleListToProbs [vec cumulative?]
+  let scaledList [0 0 0 0]
+  if (sum vec) > 0
+    [ set scaledList map [i -> (i / sum(vec))] vec ]
+
+
+  if cumulative? = true
+    [set scaledList makeListCumulative scaledList]
+
+  report scaledList
+end
+
+to-report makeListCumulative [vec]
+  ; report butfirst reverse reduce [fput (?2 + first ?1) ?1] fput [0] vec
+  report butfirst reverse reduce [[a b ] -> fput (b + first a) a] fput [0] vec
+
+end
+
+;; Select an item from a problist ascending and cumulative
+;; returns index number to extract
+to-report selectReplacement [probVec]
+  let r random-float 1
+  ; report position (first filter [r < ?] probVec) probVec
+  report position (first filter [i -> r < i] probVec) probVec
+end
+
+
+
+;; Thanks, Seth!
+to-report occurrences [x the-list]
+  report reduce
+    [[a b ] -> ifelse-value (b = x) [a + 1] [a]] (fput 0 the-list)
+end
+
+
+
+;; weighted/lottery/roulette selection
+;; needs rnd extension
+;; http://stackoverflow.com/questions/22615519/netlogo-weighted-random-draw-from-a-list-how-to-use-rnd-extension
+to-report rnd-roulette [values probabilities]
+
+  let pairs (map list values probabilities)
+  let state first rnd:weighted-one-of-list pairs [[p] -> last p]
+
+  report state
+end

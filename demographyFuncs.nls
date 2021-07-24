@@ -1,0 +1,479 @@
+
+to capture-gap
+
+  if sum saplings >= 1 and random-float 1 < (1 - (0.25 ^ (sum saplings))) ;; 0.25 is the prob of one sap being able to be an adult
+  [
+  ;; get for each species the idx (l-idx) in the light weights list for the patch
+  ; let light-pos map [abs (nhb-light - ?1)] shade-tolerance
+  let light-pos map [stol -> abs (nhb-light - stol)] shade-tolerance
+
+  ;let l-idx map [(?1 * 100) ] light-pos
+  let l-idx map [i -> i * 100] light-pos
+
+  ;; this is a list of the actual weights
+  ; let weights map [item (floor ?1) wgt-list] l-idx
+  let weights map [i -> item (floor i) wgt-list] l-idx
+
+
+  ;; now wgt the regenbank by the weights
+  ;let regenbank-wgt  (map [?1 * ?2] saplings weights)
+  let regenbank-wgt  (map [ [s w] -> s * w ] saplings weights)
+
+    ;;if sum saplings > 0
+  ;;[
+    let new-species (lottery regenbank-wgt) + 1        ;; +1 for zero-indexing
+
+    set species new-species
+
+    set last-change-tick ticks
+    set n-change n-change + 1
+
+
+    ifelse item (species - 1) growth-form = 1
+    [
+    ;; size of new recruits
+      set dbh 0.01 + random-float 0.01     ;; dbh (in m) of 0.01 m (1 cm) + noise (0, 0.01)
+      set height 1.37 + (item (species - 1) b2-jabowa) * dbh - (item (species - 1) b2-jabowa) * dbh ^ 2   ;; hgt from dbh
+      set age 1
+    ]
+    [
+      set height 1.5 + random-float 0.1
+      set age 1
+    ]
+
+    ;; empty the regeneration bank
+    set seedlings n-values n-species [0]
+    set saplings n-values n-species [0]
+
+
+    colour-patch
+  ;;]
+  ]
+end
+
+
+;; Disperse 'seeds' from each cell
+to disperse [disperser-spp diam]
+  ;; This is from the perspective of a patch dispersing its seeds
+  ;; Breaks this up into two components, each with their own routine:: immediate cells with immediate defined by crown width, long in the patch
+  ;; The third component - external rain - is grid-level so-called in the go function
+
+  nhb-dispersal disperser-spp diam  ;; this is into the immediate nhb as defined by crown width
+  ldd-within-grid disperser-spp
+
+end
+
+;; Neighbourhood dispersal (component (a) in Morales thesis figure)
+to nhb-dispersal [disperser-spp diam]
+  ;; Local dispersal - distribute seedlings across the neighbourhood
+
+  let n-seeds ( random-poisson item (disperser-spp - 1) seed-prod * ( 1 - (item (disperser-spp - 1) ldd-dispersal-frac)  ))
+
+  let cw get-crown-width-from-dbh diam
+  let shell-width ceiling (cw / patch-grain)
+  if shell-width >= length nhb-set [set shell-width length nhb-set - 1]
+
+  let dispersal-nhb no-patches
+
+  ;; Build the nhb over which seeds locally dispersed = function of crown size and using the nhb-set list
+  ifelse shell-width <= 1
+    [ set dispersal-nhb (patch-set neighbors self) ]
+    [ set dispersal-nhb sublist nhb-set 0 shell-width]
+
+
+  ;; repeat rather than n-of as some patches may get more than one seed
+  repeat n-seeds
+  [
+    ask one-of (patch-set dispersal-nhb)
+    [
+
+      if (item (disperser-spp - 1) seed-prod) > 0
+      [
+
+        let r-hgt item (disperser-spp - 1) regen-height
+
+        ;; only establish if nhb hgt is less than the critical height (regen-height)
+           if nhb-height <= r-hgt
+           [
+             let curr-r item (disperser-spp - 1) seedlings
+             ;;let new-seedlings (random-poisson item (disperser-spp - 1) seed-prod)
+             set seedlings replace-item (disperser-spp - 1) seedlings (curr-r + 1)
+           ]
+      ]
+    ]
+  ]
+end
+
+;; Longer distance dispersal but from within the grid (component (b) in Narkis' master piece)
+to ldd-within-grid [disperser-spp]
+
+  let n-ldd-seeds ( random-poisson (item (disperser-spp - 1) seed-prod) * (item (disperser-spp - 1) ldd-dispersal-frac) )
+
+  repeat n-ldd-seeds
+  [
+      let D random-exponential ((item (disperser-spp - 1) ldd-dispersal-dist) / patch-grain)   ;; ldd-dispersal-distance is in m so this converts to patches
+      let target patch-at-heading-and-distance random 360 D
+
+      if target != nobody  ;; seeds that disperse beyond the patch are lost.
+      [
+        ask target
+        [
+          let r-hgt item (disperser-spp - 1) regen-height
+
+           ;; only establish if nhb hgt is less than the critical height (regen-height)
+           if nhb-height <= r-hgt
+           [
+             let curr-r item (disperser-spp - 1) seedlings
+             set seedlings replace-item (disperser-spp - 1) seedlings (curr-r + 1)
+           ]
+        ]
+      ]
+  ]
+end
+
+;;  Long-distance dispersal from *beyond* the plot
+;;  Compute total LDD seed rain and then disperse it across patches
+to external-ldd
+
+  ;; The code here gives every species a chance to invade from outside the plot
+  ;; We use a binomial process with p = external-species (from file) and n = max of 1% of grid cells or current abundance
+
+  let ldd-abundances abundances
+  let crit-min 0.01 * count patches
+  let idx 0
+
+  ;set ldd-abundances map [ifelse-value (? < crit-min) [crit-min] [ ? ] ] ldd-abundances
+  set ldd-abundances map [i -> ifelse-value (i < crit-min) [crit-min] [i] ] ldd-abundances
+
+  let ldd-to-disperse []
+
+  set ldd-to-disperse (map [[n p ] -> random-binomial n p] ldd-abundances external-species)
+  let spp 1
+
+  foreach ldd-to-disperse
+  [
+    i -> repeat i    ;;; BROKEN NEEDS FIXING - 25-07-21
+    [
+      ask n-of i patches
+      [
+        let curr-r item (spp - 1) seedlings
+        set seedlings replace-item (spp - 1) seedlings (curr-r + 1)
+      ]
+    ]
+    set spp spp + 1
+  ]
+end
+
+
+;; Grow each tree following basic equations of Botkin et al. (1972) JABOWA
+;; down-weight based on relative hgt of cell (following Dislich et al. 2009)
+to grow
+  let dbh-increment 0
+  let hgt-increment 0
+  let b2 0
+  let b3 0
+  let competitive-penalty 1
+  set age age + 1
+
+  ;; get the optimal growth rate (DBH increment) for the species:: same as Jabowa
+  ifelse item (species - 1) growth-form = 1
+  [
+    let g item (species - 1) g-jabowa
+    let maxdbh item (species - 1) max-dbh
+    let maxheight item (species - 1) max-hgt
+    set b2 item (species - 1) b2-jabowa
+    set b3 item (species - 1) b3-jabowa
+
+    set dbh-increment ( dbh * g * ( 1 - ( dbh * height ) / (maxdbh * maxheight) ) ) / ( 2.74 + 3 * b2 * dbh - 4 * b3 * dbh ^ 2 )
+  ]
+  [
+    set hgt-increment a-tf-hgt * exp(height * b-tf-hgt)
+  ]
+
+
+  ;; and correct for nhb effects
+  ifelse nhb-height <= height
+   [ set competitive-penalty 1 ]
+   [ set competitive-penalty min list (1.0) (comp-multiplier * ( (height / nhb-height ) ^ 0.5)) ]  ;; low value for comp penalty = more reduced growth (1 = optimal growth)
+
+
+  ;; and edge effects if in play
+  let edge-penalty 1
+  ifelse edge-effects? ;; and edge? = true
+    [ set edge-penalty (1 - (edge-weight * (1 - item (species - 1) edge-response))) ]   ;; 1 - X(1-y) where X is edge-weight and y is edge-response
+    [ set edge-penalty 1 ]
+
+
+  ;; store growth penalty history for suppression mortality
+  let growth-reduction competitive-penalty * edge-penalty
+  ifelse age < 5 or length previous-growth < 5
+   [ set previous-growth fput growth-reduction previous-growth ]
+   [ set previous-growth sublist (fput growth-reduction previous-growth) 0 5 ]           ;;;; Stores most recent 5 year's growth history
+
+
+  ifelse item (species - 1) growth-form = 1
+  [
+    set dbh dbh + (dbh-increment * competitive-penalty * edge-penalty)
+    set height 1.37  + (b2 * dbh) - (b3 * dbh * dbh)   ;; this is the original JABOWA height model equation
+  ]
+  [
+    set height height + (hgt-increment * competitive-penalty * edge-penalty)
+  ]
+
+end
+
+
+;; Reduce the seedling banks by the fraction that suffer herbivory
+to herbivore-effect
+
+  ask patches
+  [
+      ; set seedlings (map [round (?1 * ?2)] seedlings herbivory)
+      ; if saplings-eaten? [ set saplings (map [round (?1 * ?2)] saplings herbivory )]
+
+    set seedlings (map [[sdl hbv ] -> round (sdl * hbv)] seedlings herbivory)
+    if saplings-eaten? [ set saplings (map [[sap hbv ] -> round (sap * hbv)] saplings herbivory)]
+  ]
+
+end
+
+;; trigger a landscape-level disturbance event
+to lsp-disturbance
+  if random-float 1 < disturbFreq
+  [
+    start-disturbance
+
+    ask patches with [disturbed? = true]
+    [
+     set species 0
+     set height 0
+     set disturbed? false
+     set disturbedArea 0
+     set pcolor 8
+
+    ;; empty the regeneration bank
+    set seedlings n-values n-species [0]
+    set saplings n-values n-species [0]
+
+    ]
+  ]
+end
+
+to macrolitterfall
+  if item (species - 1) growth-form = 2
+  [
+    ;set seedlings map [ifelse-value (? > 0) [? - 1] [0] ] seedlings
+
+    if random-float 1 < macro-litter-effect
+    [
+      let sap-die random n-species
+      if item sap-die saplings > 0
+      [
+        set saplings replace-item sap-die saplings ((item sap-die saplings) - 1)
+      ]
+    ]
+  ]
+end
+
+;; this is species-specific local effects on the seedling bank.
+to thin-regenbank
+
+   let inhibit item (species - 1) seedling-inhibition
+   if inhibit < 1 and inhibit > 0
+   [
+     set seedlings map [s -> round s * (1 - inhibit)] seedlings
+   ]
+end
+
+
+;; mortality - based on background mortality alone
+to death
+
+  if record-death? = true
+  [
+    file-open "track_mortality.txt"
+  ]
+  if record-prev? = true
+  [
+    file-open "tree_replacement.txt"
+  ]
+
+
+  let kill-me? false
+  let mort-w 1
+
+  ;; base mortality rate
+  let ma item (species - 1) max-age
+  let base-mort  (4 / ma)  ;;  from std gap models see shugart 1984 A Theory of Forest Dynamics... and also Liu & Ashton 1995 For Ecol Mgt 73, 157_75
+
+  ;; if density-dependence in play
+  ;; TO DO this needs careful thought
+  if ddm = true
+  [
+     let f-species [species] of self
+     let s-nhb count neighbors with [species = f-species]
+     if s-nhb >= 4 [ set mort-w (1 + ( (s-nhb - 4 ) / 4 ) * 1) ]
+     ;;show mort-w
+  ]
+
+  ;; tree dies?
+  ;; 1. baseline-mortality   ;; approximates the standard gap mortality model (see Keane et al. 2001)
+  if random-float 1 < (base-mort * mort-w) [set kill-me? true
+    if record-death? [file-write ticks  file-write species file-write age file-print " fate"]
+  ]
+
+
+  ;; 2. Suppression via low growth (p = growth-death if growth < crit-growth [a proportion]).
+  ;; trees older than 10 years have a chance of competition based death
+  ;; TO DO: needs close checking and tweaking - sensitive to crit-growth parameter
+
+    let s-tol item (species - 1) supp-tolerance
+    let s-mort item (species - 1) supp-mortality
+    if age > 10 and (mean previous-growth < s-tol) and random-float 1 < s-mort [
+      set kill-me? true
+      if record-death? [file-write ticks file-write species file-write age file-print " supp"]
+    ]
+
+
+  if kill-me?
+  [
+    set prev-spp species
+    set prev-height height
+
+    set height 0                  ;; this is the assumed hgt of the new tree (not yet created)
+    set species 0
+    set previous-growth []
+    if not turtle-trees? [set pcolor 8]
+
+    ;; reset the regen bank?  otherwise get lock-in effects and quick drift to monodominance?
+    ;;reset-regenbank
+
+
+    if item (prev-spp - 1) gap-maker = 1 [ set expand? true ]   ;; flag as site to check for extension
+  ]
+;;write a file with the previous species and current species
+if (record-prev?) and (ticks = recordprev-ticks) [file-write ticks file-write prev-spp  file-write  species file-print ""]
+
+  ;;
+end
+
+
+;; grow the gap if the dying species is a 'gap maker'  -> a cone of neighbouring cells is affected
+;; another option is to ranomdly hit nhbs until summed dbh of affected individuals greater than dbh of focal
+to expand-gap
+
+ let gap-center self
+ let h (([height] of gap-center) / patch-grain) + 1      ;; rescale hgt to patch units and add one to ensure a nhb patch 'hit'
+
+ let v nobody
+
+ ask gap-center
+ [
+   sprout 1                    ;; need to make a turtle to access the in-cone primitive
+   [
+     ;; turtle has a rnd bearing in one of the cardinal dirn
+     ;; set heading one-of (but-first n-values (9) [i -> i]) * 45
+     set heading one-of (range 0 8) * 45
+
+     set v patches in-cone h 0
+     die
+   ]
+ ]
+
+ if any? v
+ [
+
+   ask v
+   [
+     set height 0
+     set species 0
+;
+;      ;; reset the regen bank?  otherwise get lock-in effects and quick drift to monodom?
+      ;;reset-regenbank
+   ]
+   ;; if count v > 1 [ show count v ]
+ ]
+
+end
+
+;; start landscape-level disturbance
+to start-disturbance
+  set disturbedArea 0
+
+  ask one-of patches
+  [
+    set disturbed? true
+    set disturbFront patch-set self               ;; a new disturb-front patch-set
+  ]
+
+  disturb-spread random-exponential (maxDisturbSize * worldSize)
+
+end
+
+;; spread the landscape-level disturbance - percolation algorithm
+to disturb-spread [maxArea]
+  while [ any? disturbFront and disturbedArea <= maxArea ]                 ;; Stop when we run out of active disturbance front
+  [
+    let newDisturbFront patch-set nobody     ;; Empty set of patches for the next 'round' of the disturbance
+
+    ask disturbFront
+    [
+      let N neighbors with [ disturbed? != true ]
+
+      ask N
+      [
+       ;; 0.235 here is the approx Moore nhb percolation threshold for interesting bhv (see O'S & P 2013)
+        if (random-float 1) <= 0.235 [ set newdisturbFront ( patch-set newdisturbFront self) ]
+      ]
+   ]
+
+   set disturbFront newDisturbFront
+   ask newDisturbFront [set disturbed? true]
+   set disturbedArea disturbedArea + ( count newDisturbFront )
+  ]
+
+
+end
+
+;;seedlings-saplings
+to regenerate-patch-bank
+
+  ;; juvenile mortality
+  let dead-saplings (map [[n p] -> random-binomial n p] saplings sapling-mortality)
+  let dead-seedlings (map [[n p] -> random-binomial n p] seedlings seedling-mortality)
+
+  set saplings (map [[sap dsap] -> sap - dsap] saplings dead-saplings)
+  set seedlings (map  [[sdl dsdl] -> sdl - dsdl] seedlings dead-seedlings)
+
+  ;; sapling regeneration
+  let new-saplings (map [[n p] -> random-binomial n p] seedlings seedling-transition)
+
+  ;; saplings at t + 1 <- saplings * (1 - mort) + (seedlings * transition)
+  ;; mortality dealt with above
+  set saplings (map [[sap nsap] -> sap + nsap] saplings new-saplings)
+
+  ;; seedlings at t + 1 <- seedlings * (1 - mort - transition) + new-ones
+  ;; mortality dealt with above
+  ;; new ones dealt with in the dispersal routines (nhb-dispersal and ldd-within-grid)
+  set seedlings (map [[sdl nsap] -> sdl + nsap] seedlings new-saplings)
+
+end
+
+;; Simulate planting into the fragment
+to restoration-planting
+
+    ask patches
+    [
+      ; set saplings (map [?1 + ?2] saplings saplings-to-plant)
+    set saplings (map [[sap plt] -> sap + plt] saplings saplings-to-plant)
+    ]
+
+end
+
+
+
+;; calculate b2 and b2 (JABOWA growth coefficients; see Botkin 2001)
+to get-jabowa-coeffs
+  set b2-jabowa (map [[h d] -> (2 * (h - 1.37)) / d] max-hgt max-dbh)
+    set b3-jabowa (map [[h d] -> ((h - 1.37) / d ^ 2)] max-hgt max-dbh)
+end

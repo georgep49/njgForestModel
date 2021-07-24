@@ -1,0 +1,163 @@
+
+to setup
+  
+  clear-all
+
+  set max-shade-dist 32      ;; distance over which trees can influence each other at most (see build-shells and get light-env)
+  set abundances n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set dbh-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set age-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set hgt-by-species n-values n-species [0] ;  [0 0 0 0 0 0 0]
+  set mean-age-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set mean-hgt-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set BA-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+
+  ; set spp-list but-first n-values (n-species + 1) [i -> i]
+  set spp-list (range 1 (n-species + 1))
+  set patch-grain 4
+
+  set niche-breadth 0.3
+
+  set wgt-list []
+  get-dnorm-lookup
+
+  set colour-list []
+  set max-hgt []
+  set max-dbh []
+  set max-age []
+  set growth-form []
+  set g-jabowa []
+  set b2-jabowa []
+  set b3-jabowa []
+
+  set regen-height []
+
+  set shade-tolerance []
+
+  set repro-height []
+  set repro-age []
+  set seed-prod []
+  set ldd-dispersal-dist []
+  set ldd-dispersal-frac []
+  set gap-maker []
+  set supp-tolerance []
+  set supp-mortality []
+  set herbivory []
+  set edge-response []
+  set seedling-inhibition []
+
+  set start-dbh []
+  set start-dbh-sd []
+  set start-abund []
+  set max-init-hgt []
+
+  set seedlings-init []
+  set saplings-init []
+
+
+  set seedling-survival []
+  set sapling-survival []
+  set seedling-transition []
+  set external-species []
+
+  set saplings-to-plant (list 1 0 1 0 0 1 0 0)
+
+
+  set a-tf-hgt 0.05289
+  set b-tf-hgt -0.05695
+
+  set demography-files []
+  build-species-demography
+
+ ;;seedlings-saplings
+
+  ask patches
+  [
+    set seedlings map [i -> ifelse-value (i = 1) [10] [6] ] growth-form
+    set saplings map [i -> ifelse-value (i = 1) [2] [1] ] growth-form
+  ]
+
+  set seedling-mortality (map [ [sdl sap] -> (1 - sdl - sap)] seedling-survival seedling-transition)
+  set sapling-mortality (map [ [s] -> (1 - s)] sapling-survival)
+  ;;
+  set edge-b0 0
+  set edge-b1 1
+
+  ask patches
+  [
+      init-patch
+      new-trees
+  ]
+
+  ask patches
+    [set nhb-height get-nhb-height]
+
+  if turtle-trees? = false
+    [ ask patches [colour-patch]  ]
+
+  ;; set tick 1
+  set worldSize world-width * world-height
+  update-abundances
+
+  reset-ticks
+
+end
+
+
+to init-patch
+
+  build-sets     ;; build annuli patch-sets for shading computation
+
+  ;; set age int random-exponential 50
+  ; set species rnd-roulette (n-values n-species [? + 1]) start-abund ;;;rnd-roulette takes values then probabilities
+  set species rnd-roulette spp-list start-abund
+
+  ;; set dbh random-float (item (species - 1) max-dbh ) * 0.5 ;; 0.01
+  ifelse (item (species - 1) growth-form = 1)
+  [
+    let max-hgt-frac item (species - 1) max-init-hgt
+    if max-hgt-frac < 0 or max-hgt-frac > 1 [set max-hgt-frac 0.95]
+
+    set dbh min (list random-lognormal (item (species - 1) start-dbh) (item (species - 1) start-dbh-sd) (item (species - 1) max-dbh * max-hgt-frac))
+    if dbh < 0.01 [set dbh 0.01]
+    set height 1.37  + ((item (species - 1) b2-jabowa) * dbh) - ((item (species - 1) b3-jabowa) * dbh * dbh)
+    set age get-age-from-dbh
+  ]
+
+
+  [
+    let max-hgt-frac item (species - 1) max-init-hgt
+    if max-hgt-frac < 0 or max-hgt-frac > 1 [set max-hgt-frac 0.95]
+
+    set height min (list random-normal (item (species - 1) start-dbh) (item (species - 1) start-dbh-sd) (item (species - 1) max-hgt * max-hgt-frac))
+    if height < 0 [set height 1.5]
+    set dbh 0.1
+    set age get-age-from-hgt
+  ]
+
+  set previous-growth []
+
+  ;show dbh show height
+
+  set expand? false
+  set nhbs count item 0 nhb-set
+  let d max ldd-dispersal-dist
+
+
+
+  set edge-weight edge-effect get-edge-distance
+
+
+end
+
+
+;; This build the species demography -?> may ultimately want to read from file
+to build-species-demography
+   ;; order of species: tawa, pigeon, pukatea, kawakawa, mahoe, rimu, tree-fern
+
+   read-params-list-from-file demography-file
+   read-params-list-from-file site-file
+
+  get-jabowa-coeffs
+end
+

@@ -1,0 +1,16 @@
+To do to the Morales model
+ - add capacity to specify relative abundance at start of run (IN:: init-patches) DONE
+ - check macrolitterfall (and comment it!)
+ - add inhibtion effect for each species -> some value that local (in patch) sdl abundance reduced by (0-1) 
+ - add a global parameter specifying fraction fo max-hgt individual can eb at setup (IN: init-patch) -> currently an arbitrary 0.95 DONE
+
+
+
+
+
+NOTES TO JAMES
+ - you'll need to parameterise the spp etc.
+ - you can now specify starting relative abundance (note they don't need to sum to one) in the **forest.txt** file.  you need to install the rnd extension for this - take the folder on dropbox and add to the extensions folder
+where netLogo is installed. DONE
+ - in the **forest.txt** file there is a parameter called 'max-init-hgt' - it needs to be in the range 0-1, if not it defaults to 0.95. it sets the frasction of maxhgt that an individucal can be at setup
+ - in the demography.txt file there is a parameter called 'seedling-inhibition' - this is the proportional reduction *per yr* of seedlings growing below that species  

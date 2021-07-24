@@ -1,0 +1,76 @@
+;; Code to compute density /distribution functions for various distributions
+
+;; Gaussian densityreturn location + scale * tan(M_PI * unif_rand(rng)); (x = point of interest, mu = mean, sigma = SD)
+to-report d-gaussian [x mu sigma]
+  report (1 / (sqrt (2 * pi)  * sigma )) * exp (-((x - mu) ^ 2) / (2 * sigma ^ 2) )
+end
+
+
+;; Cauchy  density (x = point of interest, loc = location, scl = scale)
+to-report d-cauchy [x loc scl]
+  report (1 / pi) * ( scl / ((x - loc) ^ 2 + scl ^ 2 ) )
+end    
+
+;; Deviate from Cauchy distribution with location (loc) and scale (scl)
+;; From: Devroye, L. 1986. Non-Uniform Random Variate Generation, Springer, NY
+
+to-report r-cauchy [loc scl]
+  let X (pi * (random-float 1)) ;; Netlogo tan takes degrees not radians
+  report loc + scl * tan(X * (180 / pi))
+
+end
+
+;; generate a binomial deviate (N, p)
+to-report random-binomial2 [n p]
+  report length filter [a -> a] n-values n [random-float 1 < p]
+end  
+
+
+; This binomial algorithm from
+; Devroye. L. 1960. Generating the maximum of independent identically
+; distributed random variables. Computers and Mathematics with
+; Applications 6, 305-315.
+; should be a bit quicker because it only needs ~ np random-float calls
+; Based on code from 
+; https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java#23574723
+to-report random-binomial [n p]
+  ; need to trap p = 0 and p = 1
+  if p = 1 [ report n ]
+  if p = 0 [ report 0 ]
+  let ln-q ln (1 - p)
+  let x 0
+  let s 0
+  ; also need to avoid x = n
+  while [x < n] [
+    set s s + ln (random-float 1) / (n - x)
+    if s < ln-q [
+      report x
+    ]
+    set x x + 1
+  ]
+  report x
+end
+
+;; generate a lognormal deviate with specified mean and sd
+to-report random-lognormal [m s]
+  let x ln (1 + (s / m) ^ 2)
+  let mu ln m - x / 2
+  let sigma sqrt x
+  report exp (mu + random-normal 0 1 * sigma)
+end
+
+
+
+
+;;; Builds a lookup list of the normal density for x from 0 to 1.0 by step grain
+;;; Used to compute the light env growth index much more quickly...
+to get-dnorm-lookup
+  let d 0
+  let grain 0.01
+  let critical-d 1.0
+
+  while [d <= critical-d] [
+    set wgt-list lput (d-gaussian d 0 niche-breadth ) wgt-list
+    set d d + grain
+  ]
+end
