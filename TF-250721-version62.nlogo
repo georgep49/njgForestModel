@@ -1,8 +1,6 @@
 extensions [profiler matrix rnd vid]
 __includes ["distributions.nls" "initialise.nls" "fileHandle.nls" "demographySetGet.nls" "demographyFuncs.nls" "helperFuncs.nls"]
 
-
-
 globals
 [
   ;; text file names
@@ -447,7 +445,7 @@ SWITCH
 84
 turtle-trees?
 turtle-trees?
-0
+1
 1
 -1000
 
@@ -1032,6 +1030,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+286
+820
+458
+853
+smother-f
+smother-f
+0
+1
+0.5
+.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

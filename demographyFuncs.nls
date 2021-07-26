@@ -237,6 +237,17 @@ to herbivore-effect
 
 end
 
+;; smothering effect of ground weeds (e.g. Tradescantia) - at the moment this is simply cover x a scalar
+to weed-effect
+
+  ask patches
+  [
+    set seedlings (map [[sdl] -> round (sdl * (trad-cover * smother-f))] seedlings )
+    ; if saplings-eaten? [ set saplings (map [[sap hbv ] -> round (sap * hbv)] saplings herbivory)]
+  ]
+
+end
+
 ;; trigger a landscape-level disturbance event
 to lsp-disturbance
   if random-float 1 < disturbFreq
