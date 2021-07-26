@@ -152,9 +152,9 @@ to external-ldd
 
   foreach ldd-to-disperse
   [
-    i -> repeat i    ;;; BROKEN NEEDS FIXING - 25-07-21
+    i -> repeat i    
     [
-      ask n-of i patches
+      ask one-of patches       ;; use repeat + one-of as same patch may get multiple dispersals
       [
         let curr-r item (spp - 1) seedlings
         set seedlings replace-item (spp - 1) seedlings (curr-r + 1)
@@ -477,3 +477,40 @@ to get-jabowa-coeffs
   set b2-jabowa (map [[h d] -> (2 * (h - 1.37)) / d] max-hgt max-dbh)
     set b3-jabowa (map [[h d] -> ((h - 1.37) / d ^ 2)] max-hgt max-dbh)
 end
+
+
+
+;; Tradescantia (ground weed) spread
+to spread-trad
+  
+  ;; within patch cover spread
+  set trad-cover (get-logistic 1 2.5 trad-cover trad-growth)
+  
+  ;; spread to unoccupied nhb patches
+  if trad-cover > 0.5 [
+    ask n-of (random-binomial 8 trad-spread-local) neighbors [
+    
+      if trad-cover = 0 
+      [
+        set trad-cover 0.05
+        set trad-inv ticks
+      ]
+    ]  
+  ]  
+  
+  ;; random long-distance dispersal
+  if herbivory? [
+    ask n-of (random-binomial 1 trad-spread-local) patches [
+      
+      if trad-cover = 0 
+      [
+        set trad-cover 0.05
+        set trad-inv ticks
+      ]
+    ]    
+  ]
+end  
+
+
+
+

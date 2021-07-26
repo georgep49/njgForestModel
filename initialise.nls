@@ -94,11 +94,13 @@ to setup
 
   if turtle-trees? = false
     [ ask patches [colour-patch]  ]
-
+  
+  if ground-weeds? [init-trad]
+  
   ;; set tick 1
   set worldSize world-width * world-height
   update-abundances
-
+  
   reset-ticks
 
 end
@@ -143,12 +145,60 @@ to init-patch
   set nhbs count item 0 nhb-set
   let d max ldd-dispersal-dist
 
-
-
   set edge-weight edge-effect get-edge-distance
-
-
 end
+
+to init-trad
+  
+  let n-init round (trad-init-cover * count patches)
+  
+  
+  if trad-init-scenario = "random"
+  [
+    ask n-of n-init patches [
+      set trad-cover random-float 0.5
+      set trad-inv 0
+    ]
+  ]  
+  
+  if trad-init-scenario = "edges"
+  [
+    let the-edges patches with [pxcor = 0 or pycor = 0 or pxcor = (world-width - 1) or pycor = (world-height - 1)]
+    
+    ask n-of (min list n-init count the-edges) the-edges [
+      set trad-cover random-float 0.5
+      set trad-inv 0
+    ]
+  ]  
+  
+  if trad-init-scenario = "clustered"
+  [
+    let seeded 0
+    let trad-patches no-patches
+    while [count trad-patches < n-init] [
+      show count trad-patches
+      ifelse random-float 1 < 0.1 or trad-patches = no-patches
+      [ 
+        ask one-of patches with [trad-cover = 0] 
+        [
+          set trad-cover 0 
+          set trad-inv 0
+          set trad-patches (patch-set trad-patches self)
+        ]
+      ]  
+      [
+        ask one-of [neighbors with [trad-cover = 0]] of trad-patches
+        [
+          set trad-cover random-float 0.5
+          set trad-inv 0
+          set trad-patches (patch-set trad-patches self)
+        ]
+      ] 
+    ] 
+  ]
+  
+end
+
 
 
 ;; This build the species demography -?> may ultimately want to read from file

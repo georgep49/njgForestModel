@@ -74,3 +74,11 @@ to get-dnorm-lookup
     set d d + grain
   ]
 end
+
+
+;; Returns a value from a logistic function defined by
+; k (max ), a (slope), (x - x0) where x0 is midpoint
+
+to-report get-logistic [k a x x0]
+  report k / (1 + exp(- k * ( x - x0)))
+end  

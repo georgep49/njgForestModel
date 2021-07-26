@@ -84,6 +84,7 @@ globals
   edge-b1
   edge-b0
 
+
 ]
 
 patches-own
@@ -93,12 +94,10 @@ patches-own
   species
   prev-spp
 
-
   nhbs
   nhb-set
   height
   prev-height
-
 
   dbh
   age
@@ -113,11 +112,14 @@ patches-own
   last-change-tick
   n-change
 
-
   seedlings
   saplings
   seedling-density
   sapling-density
+
+  ; ground-cover weed parameters
+  trad-cover
+  trad-inv
 
   prop-ldd
 ]
@@ -298,7 +300,6 @@ to build-sets
   ]
 
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 320
@@ -606,10 +607,10 @@ restoration-planting?
 -1000
 
 SLIDER
-463
-650
-635
-683
+648
+688
+820
+721
 planting-frequency
 planting-frequency
 1
@@ -664,9 +665,9 @@ PENS
 "default" 1.0 0 -16777216 true "" ""
 
 SWITCH
-998
+975
 650
-1101
+1078
 683
 plot?
 plot?
@@ -932,6 +933,104 @@ TEXTBOX
 This is the elevated rate of sap mortality under life-form type 2 (tree-ferns, nikau, ...). It is prob of one sap being killed (pa).
 11
 0.0
+1
+
+SWITCH
+310
+695
+451
+728
+ground-weeds?
+ground-weeds?
+0
+1
+-1000
+
+SLIDER
+465
+693
+637
+726
+trad-spread-local
+trad-spread-local
+0
+1
+0.0
+.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+464
+733
+636
+766
+trad-spread-long
+trad-spread-long
+0
+.1
+1.0E-4
+.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+465
+771
+637
+804
+trad-growth
+trad-growth
+0
+2.5
+1.0
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+287
+734
+459
+767
+trad-init-cover
+trad-init-cover
+0
+1
+0.025
+.005
+1
+NIL
+HORIZONTAL
+
+CHOOSER
+307
+770
+445
+815
+trad-init-scenario
+trad-init-scenario
+"random" "clustered" "edges"
+1
+
+BUTTON
+468
+812
+573
+845
+highlight-trad
+ask patches with [ trad-cover > 0 ]\n[set pcolor yellow]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
