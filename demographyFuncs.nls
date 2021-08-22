@@ -136,20 +136,30 @@ end
 to external-ldd
 
   ;; The code here gives every species a chance to invade from outside the plot
-  ;; We use a binomial process with p = external-species (from file) and n = max of 1% of grid cells or current abundance
-
-  let ldd-abundances abundances
-  let crit-min 0.01 * count patches
-  let idx 0
-
-  ;set ldd-abundances map [ifelse-value (? < crit-min) [crit-min] [ ? ] ] ldd-abundances
-  set ldd-abundances map [i -> ifelse-value (i < crit-min) [crit-min] [i] ] ldd-abundances
-
+  ;; We use a binomial process with p = external-species (from file) and n = max of 1% of grid cells or 1 equal vs 2 current abundance
   let ldd-to-disperse []
-
+  let ldd-abundances []
+  
+  ;; External seed rain is random (1 / S)
+  if ext-dispersal-scenario = "equal"
+  [
+    let scalar round (count patches / n-species)
+    set ldd-abundances n-values n-species [ i -> (i + 1) * scalar ]
+  ]
+  
+  ;; External seed rain is proportional to the current composition
+  if ext-dispersal-scenario = "abundance"
+  [
+    set ldd-abundances abundances
+  ]
+  
+  ;; Rescale here to get number of 'seeds' to disperse
+  let crit-min 0.01 * count patches  
+  set ldd-abundances map [i -> ifelse-value (i < crit-min) [crit-min] [i] ] ldd-abundances
   set ldd-to-disperse (map [[n p ] -> random-binomial n p] ldd-abundances external-species)
+  
+  ;; Now disperse the seeds to grid cells at random  
   let spp 1
-
   foreach ldd-to-disperse
   [
     i -> repeat i    
