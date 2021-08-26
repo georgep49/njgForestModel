@@ -93,8 +93,19 @@ to close-movie
 
 end
 
+;; Export entire world and history, etc. - this generates large files
+to write-world
+  carefully
+  [
+    let file-name (word "world_" behaviorspace-run-number "_at_" ticks ".csv")
+    export-world file-name
+  ]
+  [
+    show "World writing failed"
+  ]
+end
 
-
+;; Export grid composition *only* - no structural information
 to write-pattern
   carefully
   [
@@ -106,7 +117,6 @@ to write-pattern
     [
       let X (word behaviorspace-run-number " " pxcor " " pycor " " species)
       file-print X
-      ;;file-write behaviorspace-run-number file-write pxcor file-write pycor file-write species file-print ""
     ]
     file-close
   ]
