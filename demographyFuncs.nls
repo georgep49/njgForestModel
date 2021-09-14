@@ -427,7 +427,7 @@ to start-disturbance
     set disturbFront patch-set self               ;; a new disturb-front patch-set
   ]
 
-  disturb-spread random-exponential (maxDisturbSize * worldSize)
+  disturb-spread random-exponential (maxDisturbSize * world-size-patches)
 
 end
 

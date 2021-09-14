@@ -386,7 +386,7 @@ disturbFreq
 disturbFreq
 0
 1
-0.05
+0.0
 .005
 1
 NIL
@@ -837,10 +837,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-834
-690
-967
-723
+1222
+842
+1349
+875
 record-prev?
 record-prev?
 1
@@ -848,10 +848,10 @@ record-prev?
 -1000
 
 SLIDER
-834
-727
-1006
-760
+1361
+841
+1533
+874
 recordprev-ticks
 recordprev-ticks
 0
@@ -940,7 +940,7 @@ SWITCH
 728
 ground-weeds?
 ground-weeds?
-1
+0
 1
 -1000
 
@@ -1054,7 +1054,7 @@ CHOOSER
 ext-dispersal-scenario
 ext-dispersal-scenario
 "equal" "abundance"
-1
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2294,7 +2294,7 @@ NetLogo 6.2.0
       <value value="500"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="test-ldd" repetitions="30" runMetricsEveryStep="true">
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="300"/>
@@ -2306,11 +2306,11 @@ NetLogo 6.2.0
     <enumeratedValueSet variable="n-species">
       <value value="8"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-init-scenario">
-      <value value="&quot;clustered&quot;"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="recordprev-ticks">
       <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-init-scenario">
+      <value value="&quot;clustered&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="trad-spread-long">
       <value value="1.0E-4"/>
@@ -2364,7 +2364,7 @@ NetLogo 6.2.0
       <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ground-weeds?">
-      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="planting-frequency">
       <value value="8"/>
@@ -2378,11 +2378,11 @@ NetLogo 6.2.0
     <enumeratedValueSet variable="comp-multiplier">
       <value value="1.6"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="maxDisturbSize">
-      <value value="1"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="macro-litter-effect">
       <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="maxDisturbSize">
+      <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="trad-growth">
       <value value="1"/>
