@@ -2,7 +2,10 @@
 to setup
   
   clear-all
-
+  let dim (sqrt (world-area * 1e4)) / patch-grain
+  resize-world 0 dim 0 dim
+  set-patch-size floor 6 * (100 / dim)  
+  
   set max-shade-dist 32      ;; distance over which trees can influence each other at most (see build-shells and get light-env)
   set abundances n-values n-species [0] ; [0 0 0 0 0 0 0]
   set dbh-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
@@ -98,7 +101,7 @@ to setup
   if ground-weeds? [init-trad]
   
   ;; set tick 1
-  set worldSize world-width * world-height
+  set world-size-patches world-width * world-height
   update-abundances
   
   reset-ticks
