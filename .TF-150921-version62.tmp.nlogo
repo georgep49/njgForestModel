@@ -139,7 +139,7 @@ to profile ;; Profile code using dedicated profile button
   profiler:reset         ;; clear the data
 end
 
-;; NOTE `to setup` is contained in initialise.nls
+;
 
 to go
 

@@ -6,7 +6,7 @@ to setup
   resize-world 0 dim 0 dim
   set-patch-size floor 6 * (100 / dim)  
   
-  set max-shade-dist 32      ;; distance over which trees can influence each other at most (see build-shells and get light-env)
+  set max-shade-dist 32      ;; distance over which trees can influence each other at most (see build-shells and get light-env) (WHY 32 HARD CODED??????)
   set abundances n-values n-species [0] ; [0 0 0 0 0 0 0]
   set dbh-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
   set age-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
@@ -66,7 +66,7 @@ to setup
   set saplings-to-plant (list 1 0 1 0 0 1 0 0)
 
 
-  set a-tf-hgt 0.05289
+  set a-tf-hgt 0.05289 ;; WHERE DO THESE VALUES COME FROM
   set b-tf-hgt -0.05695
 
   set demography-files []
