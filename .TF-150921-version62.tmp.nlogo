@@ -139,7 +139,7 @@ to profile ;; Profile code using dedicated profile button
   profiler:reset         ;; clear the data
 end
 
-;
+;; NOTE `to setup` is contained in initialise.nls
 
 to go
 
@@ -451,7 +451,7 @@ SWITCH
 84
 turtle-trees?
 turtle-trees?
-0
+1
 1
 -1000
 
@@ -1144,7 +1144,7 @@ SWITCH
 205
 profile_setup
 profile_setup
-1
+0
 1
 -1000
 
@@ -2482,6 +2482,113 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="ext-dispersal-scenario">
       <value value="&quot;equal&quot;"/>
       <value value="&quot;abundance&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="disturbFreq">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-species">
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recordprev-ticks">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-init-scenario">
+      <value value="&quot;clustered&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-spread-long">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ddm">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="smother-f">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="external-rain?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="save_profile">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-ticks">
+      <value value="800"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="edge-effects?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="edge-b2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="turtle-trees?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="restoration-planting?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="record-prev?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="demography-file">
+      <value value="&quot;demography_newTFKR.txt&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="saplings-eaten?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="world-area">
+      <value value="1.25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="site-file">
+      <value value="&quot;forest.txt&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="record-death?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-init-cover">
+      <value value="0.025"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-spread-local">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="plot?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="profile_setup">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ground-weeds?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="planting-frequency">
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="patch-grain">
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="herbivory?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="col-height">
+      <value value="35"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="comp-multiplier">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="macro-litter-effect">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="maxDisturbSize">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="trad-growth">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ext-dispersal-scenario">
+      <value value="&quot;equal&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

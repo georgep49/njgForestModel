@@ -19,7 +19,7 @@ to setup
   set spp-list (range 1 (n-species + 1))
   set patch-grain 4
 
-  set niche-breadth 0.3
+  set niche-breadth 0.3 ;; Where did this value come from and why is it not set in interface
 
   set wgt-list []
   get-dnorm-lookup
@@ -42,7 +42,7 @@ to setup
   set seed-prod []
   set ldd-dispersal-dist []
   set ldd-dispersal-frac []
-  set gap-maker []
+  set gap-maker [] ;; Binary as to whether species is a, possible?, gap-maker i.e. can make a forest gap when it dies
   set supp-tolerance []
   set supp-mortality []
   set herbivory []
@@ -63,7 +63,7 @@ to setup
   set seedling-transition []
   set external-species []
 
-  set saplings-to-plant (list 1 0 1 0 0 1 0 0)
+  set saplings-to-plant (list 1 0 1 0 0 1 0 0) ;; Where does this list come frome?
 
 
   set a-tf-hgt 0.05289 ;; WHERE DO THESE VALUES COME FROM
