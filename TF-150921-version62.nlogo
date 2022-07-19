@@ -306,13 +306,13 @@ to build-sets
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-320
+331
 10
-929
-620
+941
+621
 -1
 -1
-21.46625258399798
+5.11681719253465
 1
 10
 1
@@ -323,9 +323,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-27
+117
 0
-27
+117
 1
 1
 1
@@ -384,10 +384,10 @@ NIL
 1
 
 SLIDER
-1133
-13
-1305
-46
+1164
+10
+1336
+43
 disturbFreq
 disturbFreq
 0
@@ -399,10 +399,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1133
-51
-1305
-84
+1164
+48
+1336
+81
 maxDisturbSize
 maxDisturbSize
 0
@@ -414,10 +414,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1308
-15
-1411
-48
+1339
+12
+1442
+45
 ddm
 ddm
 1
@@ -445,10 +445,10 @@ PENS
 "pen-2" 1.0 0 -8630108 true "" "plot max [nhb-light] of patches"
 
 SWITCH
-1309
-51
-1434
-84
+1340
+48
+1465
+81
 turtle-trees?
 turtle-trees?
 1
@@ -456,10 +456,10 @@ turtle-trees?
 -1000
 
 SLIDER
-1134
-108
-1306
-141
+1165
+105
+1337
+138
 n-species
 n-species
 8
@@ -471,10 +471,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1135
-146
-1307
-179
+1166
+143
+1338
+176
 max-ticks
 max-ticks
 1000
@@ -486,10 +486,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1133
-193
-1305
-226
+1164
+190
+1336
+223
 col-height
 col-height
 0
@@ -519,10 +519,10 @@ PENS
 "default" 1.0 1 -16777216 true "" ""
 
 PLOT
-1136
-620
-1405
-836
+1167
+617
+1436
+833
 Age-DBH Relationship
 Age
 DBH
@@ -537,10 +537,10 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 TEXTBOX
-1169
-643
-1372
-665
+1200
+640
+1403
+662
 500 randomly selected patches, every 10 yr
 10
 0.0
@@ -557,10 +557,10 @@ Light field (0 [high] to low [1]); max, mean, min
 1
 
 SWITCH
-1313
-151
-1427
-184
+1344
+148
+1458
+181
 herbivory?
 herbivory?
 1
@@ -568,10 +568,10 @@ herbivory?
 -1000
 
 SWITCH
-1315
-186
-1448
-219
+1346
+183
+1479
+216
 edge-effects?
 edge-effects?
 1
@@ -619,17 +619,17 @@ planting-frequency
 planting-frequency
 1
 10
-8.0
+7.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1142
-286
-1314
-319
+1173
+283
+1345
+316
 edge-b2
 edge-b2
 0
@@ -641,20 +641,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1136
-329
-1333
-371
+1167
+326
+1364
+368
 as edge-b2 increases distance over which edge-effect occurs reduces
 11
 0.0
 1
 
 PLOT
-1137
-472
-1337
-622
+1168
+469
+1368
+619
 Edge Curve
 Distance
 E(d)
@@ -669,10 +669,10 @@ PENS
 "default" 1.0 0 -16777216 true "" ""
 
 SWITCH
-975
-650
-1078
-683
+1006
+647
+1109
+680
 plot?
 plot?
 0
@@ -702,10 +702,10 @@ forest.txt
 String
 
 MONITOR
-1136
-232
-1203
-277
+1167
+229
+1234
+274
 BA per ha
 ba-per-ha
 1
@@ -713,20 +713,20 @@ ba-per-ha
 11
 
 TEXTBOX
-1456
-96
-1538
-118
+1487
+93
+1569
+115
 Dispersal from\noutside the world
 9
 15.0
 1
 
 SWITCH
-1310
-94
-1443
-127
+1341
+91
+1474
+124
 external-rain?
 external-rain?
 0
@@ -734,10 +734,10 @@ external-rain?
 -1000
 
 MONITOR
-1203
-233
-1283
-278
+1234
+230
+1314
+275
 Biggest tree
 max [dbh] of patches
 3
@@ -780,10 +780,10 @@ PENS
 "pen-6" 1.0 0 -16110067 true "" "plot item 6 BA-by-species"
 
 MONITOR
-1283
-234
-1366
-279
+1314
+231
+1397
+276
 Mean tree size
 mean [dbh] of patches
 2
@@ -791,10 +791,10 @@ mean [dbh] of patches
 11
 
 MONITOR
-1369
-233
-1452
-278
+1400
+230
+1483
+275
 Median tree sizes
 median [dbh] of patches
 3
@@ -828,10 +828,10 @@ PENS
 "pen-8" 1.0 0 -8990512 true "" "plot item 7 abundances"
 
 SLIDER
-1138
-380
-1310
-413
+1169
+377
+1341
+410
 comp-multiplier
 comp-multiplier
 0
@@ -869,10 +869,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1406
-620
-1657
-836
+1437
+617
+1688
+833
 Age-hgt Relationship
 Age
 Height
@@ -887,20 +887,20 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 TEXTBOX
-1432
-643
-1582
-661
+1463
+640
+1613
+658
 500 randomly selected Tfs every 10 yr
 8
 0.0
 1
 
 PLOT
-1346
-411
-1650
-618
+1377
+408
+1681
+615
 Tree fern height structure
 NIL
 NIL
@@ -915,10 +915,10 @@ PENS
 "default" 1.0 1 -16777216 true "set-histogram-num-bars 20\nset-plot-y-range 0 2000" "if plot? and ticks mod 10 = 0\n[ histogram [height] of patches with [species = 7] ]"
 
 SLIDER
-1360
-352
-1532
-385
+1391
+349
+1563
+382
 macro-litter-effect
 macro-litter-effect
 0
@@ -930,10 +930,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1364
-307
-1606
-349
+1395
+304
+1637
+346
 This is the elevated rate of sap mortality under life-form type 2 (tree-ferns, nikau, ...). It is prob of one sap being killed (pa).
 11
 0.0
@@ -1053,20 +1053,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-941
-107
-1125
-152
+972
+104
+1156
+149
 ext-dispersal-scenario
 ext-dispersal-scenario
 "equal" "abundance"
 0
 
 SLIDER
-939
-65
-1123
-98
+970
+62
+1154
+95
 patch-grain
 patch-grain
 1
@@ -1078,15 +1078,15 @@ m
 HORIZONTAL
 
 SLIDER
-939
-26
-1122
-59
+970
+23
+1153
+56
 world-area
 world-area
 0
 50
-1.25
+22.0
 .25
 1
 ha
@@ -1110,10 +1110,10 @@ NIL
 1
 
 BUTTON
-942
-173
-1008
-206
+973
+170
+1039
+203
 NIL
 profile
 NIL
@@ -1127,10 +1127,10 @@ NIL
 1
 
 SWITCH
-942
-207
-1066
-240
+973
+204
+1097
+237
 save_profile
 save_profile
 1
@@ -1138,10 +1138,10 @@ save_profile
 -1000
 
 SWITCH
-1010
-172
-1124
-205
+1041
+169
+1155
+202
 profile_setup
 profile_setup
 0
@@ -2484,112 +2484,24 @@ NetLogo 6.2.2
       <value value="&quot;abundance&quot;"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
+  <experiment name="setup_scale_profile" repetitions="2" runMetricsEveryStep="true">
+    <setup>profiler:reset
+profiler:start
+       repeat 15 [setup]
+profiler:stop</setup>
+    <go>stop</go>
+    <metric>profiler:data</metric>
+    <steppedValueSet variable="world-area" first="2" step="2" last="40"/>
+  </experiment>
+  <experiment name="go_scale_profile" repetitions="1" runMetricsEveryStep="false">
+    <setup>profiler:reset
+setup
+profiler:start</setup>
     <go>go</go>
-    <metric>count turtles</metric>
-    <enumeratedValueSet variable="disturbFreq">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-species">
-      <value value="8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="recordprev-ticks">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-init-scenario">
-      <value value="&quot;clustered&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-spread-long">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="ddm">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="smother-f">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="external-rain?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="save_profile">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-ticks">
-      <value value="800"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="edge-effects?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="edge-b2">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="turtle-trees?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="restoration-planting?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="record-prev?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="demography-file">
-      <value value="&quot;demography_newTFKR.txt&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="saplings-eaten?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="world-area">
-      <value value="1.25"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="site-file">
-      <value value="&quot;forest.txt&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="record-death?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-init-cover">
-      <value value="0.025"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-spread-local">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="plot?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="profile_setup">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="ground-weeds?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="planting-frequency">
-      <value value="8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="patch-grain">
-      <value value="4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="herbivory?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="col-height">
-      <value value="35"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="comp-multiplier">
-      <value value="1.6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="macro-litter-effect">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="maxDisturbSize">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="trad-growth">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="ext-dispersal-scenario">
-      <value value="&quot;equal&quot;"/>
-    </enumeratedValueSet>
+    <final>profiler:stop</final>
+    <timeLimit steps="2"/>
+    <metric>profiler:data</metric>
+    <steppedValueSet variable="world-area" first="2" step="2" last="40"/>
   </experiment>
 </experiments>
 @#$#@#$#@
