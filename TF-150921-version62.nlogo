@@ -143,7 +143,7 @@ end
 
 to go
 
-  if vid:recorder-status = "recording" [ vid:record-interface ]
+  if vid:recorder-status = "recording" [ vid:record-interface ] ;;Records the NetLogo interface view to the active recording.
 
     ;; Landscape-level disturbance?
     if disturbFreq > 0 [ lsp-disturbance ]
@@ -308,11 +308,11 @@ end
 GRAPHICS-WINDOW
 331
 10
-941
-621
+838
+518
 -1
 -1
-5.11681719253465
+17.88854381999832
 1
 10
 1
@@ -323,9 +323,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-117
+27
 0
-117
+27
 1
 1
 1
@@ -479,7 +479,7 @@ max-ticks
 max-ticks
 1000
 10000
-800.0
+0.0
 250
 1
 NIL
@@ -606,7 +606,7 @@ SWITCH
 684
 restoration-planting?
 restoration-planting?
-0
+1
 1
 -1000
 
@@ -619,7 +619,7 @@ planting-frequency
 planting-frequency
 1
 10
-7.0
+5.0
 1
 1
 NIL
@@ -675,7 +675,7 @@ SWITCH
 680
 plot?
 plot?
-0
+1
 1
 -1000
 
@@ -946,7 +946,7 @@ SWITCH
 728
 ground-weeds?
 ground-weeds?
-1
+0
 1
 -1000
 
@@ -959,7 +959,7 @@ trad-spread-local
 trad-spread-local
 0
 1
-0.1
+0.06
 .01
 1
 NIL
@@ -974,7 +974,7 @@ trad-spread-long
 trad-spread-long
 0
 .1
-0.0
+0.1
 .001
 1
 NIL
@@ -1004,7 +1004,7 @@ trad-init-cover
 trad-init-cover
 0
 1
-0.025
+0.115
 .005
 1
 NIL
@@ -1026,7 +1026,7 @@ BUTTON
 573
 845
 highlight-trad
-ask patches with [ trad-cover > 0 ]\n[set pcolor yellow]
+ask patches with [ trad-cover > 0 ]\n[set pcolor white]
 NIL
 1
 T
@@ -1086,7 +1086,7 @@ world-area
 world-area
 0
 50
-22.0
+1.25
 .25
 1
 ha

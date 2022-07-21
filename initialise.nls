@@ -2,9 +2,9 @@
 to setup
   
   clear-all
-  let dim (sqrt (world-area * 1e4)) / patch-grain
+  let dim (sqrt (world-area * 1e4)) / patch-grain ;;dim is the number of cells across each axis (i.e. world-size = dim x dim)
   resize-world 0 dim 0 dim
-  set-patch-size floor 6 * (100 / dim)  
+  set-patch-size floor 5 * (100 / dim) ;;set display size of the world
   
   set max-shade-dist 32      ;; distance over which trees can influence each other at most (see build-shells and get light-env) (WHY 32 HARD CODED??????)
   set abundances n-values n-species [0] ; [0 0 0 0 0 0 0]
@@ -13,11 +13,10 @@ to setup
   set hgt-by-species n-values n-species [0] ;  [0 0 0 0 0 0 0]
   set mean-age-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
   set mean-hgt-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
-  set BA-by-species n-values n-species [0] ; [0 0 0 0 0 0 0]
+  set BA-by-species n-values n-species [0] ; [0 0 0 0 0 0 0] ;; Doesn't n-species have to be eight to match input files and data
 
-  ; set spp-list but-first n-values (n-species + 1) [i -> i]
-  set spp-list (range 1 (n-species + 1))
-  set patch-grain 4
+  set spp-list (range 1 (n-species + 1)) ;;Note this creates a list from 1 to and including n-species (range stops at one before the max value set)
+  set patch-grain 4 ;; Why do we reset the patch grain each run and why 4??
 
   set niche-breadth 0.3 ;; Where did this value come from and why is it not set in interface
 
@@ -74,7 +73,7 @@ to setup
 
  ;;seedlings-saplings
 
-  ask patches
+  ask patches ;;What is this doing. Assigns 10/2 or 6/1 to a list in each patch depending on the growth form list?? Is this the abundance?? If so why not random??
   [
     set seedlings map [i -> ifelse-value (i = 1) [10] [6] ] growth-form
     set saplings map [i -> ifelse-value (i = 1) [2] [1] ] growth-form
@@ -82,7 +81,8 @@ to setup
 
   set seedling-mortality (map [ [sdl sap] -> (1 - sdl - sap)] seedling-survival seedling-transition)
   set sapling-mortality (map [ [s] -> (1 - s)] sapling-survival)
-  ;;
+  
+  ;; What are edge-b0 and b1
   set edge-b0 0
   set edge-b1 1
 
@@ -113,12 +113,11 @@ to init-patch
 
   build-sets     ;; build annuli patch-sets for shading computation
 
-  ;; set age int random-exponential 50
-  ; set species rnd-roulette (n-values n-species [? + 1]) start-abund ;;;rnd-roulette takes values then probabilities
+  ; set age int random-exponential 50
   set species rnd-roulette spp-list start-abund
 
   ;; set dbh random-float (item (species - 1) max-dbh ) * 0.5 ;; 0.01
-  ifelse (item (species - 1) growth-form = 1)
+  ifelse (item (species - 1) growth-form = 1) ;;sets the height and age depending on growth form either tree (dbh) or tree fern (hgt)
   [
     let max-hgt-frac item (species - 1) max-init-hgt
     if max-hgt-frac < 0 or max-hgt-frac > 1 [set max-hgt-frac 0.95]
@@ -204,7 +203,7 @@ end
 
 
 
-;; This build the species demography -?> may ultimately want to read from file
+;; This builds the species demography -?> may ultimately want to read from file
 to build-species-demography
    ;; order of species: tawa, pigeon, pukatea, kawakawa, mahoe, rimu, tree-fern
 
