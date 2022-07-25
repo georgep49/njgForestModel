@@ -9,9 +9,10 @@ nl <- nl(nlversion = "6.2.2",
          modelpath = modelpath,
          jvmmem = 1024)
 
-nl@experiment <- experiment(expname="weed_sensitivity",
+
+nl@experiment <- experiment(expname="weed_impact",
                             outpath=outpath,
-                            repetition=4,
+                            repetition=5,
                             tickmetrics="true",
                             idsetup="setup",
                             idgo="go",
@@ -22,16 +23,12 @@ nl@experiment <- experiment(expname="weed_sensitivity",
                                       "dbh-by-species",
                                       "hgt-by-species",
                                       "abundances"),
-                            variables = list('trad-init-cover' = list(min=0, max=1, step=0.5, qfun="qunif"),
-                                             "smother-f" = list(min=0, max=1, step=0.5, qfun="qunif"),
-                                             "trad-spread-local" = list(min=0, max=1, step=0.5, qfun="qunif"),
-                                             "trad-spread-long" = list(min=0, max=1, step=0.5, qfun="qunif"),
-                                             "trad-growth" = list(min=0, max=2.5, step=1.25, qfun="qunif")),
-                            constants = list('ground-weeds?' = 'true'))
+                            variables = list("ground-weeds?" = list(values=c("true", "false"))),
+                            constants = list())
 
 
-nl@simdesign <- simdesign_ff(nl=nl,
-                             nseeds=3)
+nl@simdesign <- simdesign_distinct(nl=nl,
+                                   nseeds=3)
 
 # Evaluate nl object:
 eval_variables_constants(nl)
@@ -46,6 +43,3 @@ setsim(nl, "simoutput") <- results
 
 # Write output to outpath of experiment within nl
 write_simoutput(nl)
-
-# Do further analysis:
-analyze_nl(nl)
