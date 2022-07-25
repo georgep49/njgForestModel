@@ -392,7 +392,7 @@ disturbFreq
 disturbFreq
 0
 1
-0.0
+0.1
 .005
 1
 NIL
@@ -407,7 +407,7 @@ maxDisturbSize
 maxDisturbSize
 0
 1
-1.0
+0.4
 .01
 1
 NIL
@@ -479,7 +479,7 @@ max-ticks
 max-ticks
 1000
 10000
-0.0
+1000.0
 250
 1
 NIL
@@ -494,7 +494,7 @@ col-height
 col-height
 0
 35
-35.0
+6.5
 .25
 1
 NIL
@@ -619,7 +619,7 @@ planting-frequency
 planting-frequency
 1
 10
-5.0
+10.0
 1
 1
 NIL
@@ -729,7 +729,7 @@ SWITCH
 124
 external-rain?
 external-rain?
-0
+1
 1
 -1000
 
@@ -1144,7 +1144,7 @@ SWITCH
 202
 profile_setup
 profile_setup
-0
+1
 1
 -1000
 

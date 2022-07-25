@@ -24,7 +24,8 @@ nl@experiment <- experiment(expname="weed_impact",
                                       "hgt-by-species",
                                       "abundances"),
                             variables = list("ground-weeds?" = list(values=c("true", "false"))),
-                            constants = list())
+                            constants = list("world-area" = 1,
+                                             "patch-grain" = 4))
 
 
 nl@simdesign <- simdesign_distinct(nl=nl,

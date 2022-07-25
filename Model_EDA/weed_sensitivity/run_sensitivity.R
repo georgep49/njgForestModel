@@ -11,7 +11,7 @@ nl <- nl(nlversion = "6.2.2",
 
 nl@experiment <- experiment(expname="weed_sensitivity",
                             outpath=outpath,
-                            repetition=4,
+                            repetition=3,
                             tickmetrics="true",
                             idsetup="setup",
                             idgo="go",
@@ -27,11 +27,13 @@ nl@experiment <- experiment(expname="weed_sensitivity",
                                              "trad-spread-local" = list(min=0, max=1, step=0.5, qfun="qunif"),
                                              "trad-spread-long" = list(min=0, max=1, step=0.5, qfun="qunif"),
                                              "trad-growth" = list(min=0, max=2.5, step=1.25, qfun="qunif")),
-                            constants = list('ground-weeds?' = 'true'))
+                            constants = list('ground-weeds?' = 'true',
+                                             "world-area" = 1,
+                                             "patch-grain" = 4))
 
 
 nl@simdesign <- simdesign_ff(nl=nl,
-                             nseeds=3)
+                             nseeds=2)
 
 # Evaluate nl object:
 eval_variables_constants(nl)
