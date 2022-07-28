@@ -308,11 +308,11 @@ end
 GRAPHICS-WINDOW
 331
 10
-838
-518
+859
+539
 -1
 -1
-17.88854381999832
+20.0
 1
 10
 1
@@ -323,9 +323,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-27
+25
 0
-27
+25
 1
 1
 1
@@ -392,7 +392,7 @@ disturbFreq
 disturbFreq
 0
 1
-0.0
+0.1
 .005
 1
 NIL
@@ -407,7 +407,7 @@ maxDisturbSize
 maxDisturbSize
 0
 1
-1.0
+0.4
 .01
 1
 NIL
@@ -479,7 +479,7 @@ max-ticks
 max-ticks
 1000
 10000
-0.0
+1000.0
 250
 1
 NIL
@@ -494,7 +494,7 @@ col-height
 col-height
 0
 35
-35.0
+6.5
 .25
 1
 NIL
@@ -619,7 +619,7 @@ planting-frequency
 planting-frequency
 1
 10
-5.0
+10.0
 1
 1
 NIL
@@ -729,7 +729,7 @@ SWITCH
 124
 external-rain?
 external-rain?
-0
+1
 1
 -1000
 
@@ -959,7 +959,7 @@ trad-spread-local
 trad-spread-local
 0
 1
-0.06
+0.2
 .01
 1
 NIL
@@ -974,7 +974,7 @@ trad-spread-long
 trad-spread-long
 0
 .1
-0.1
+0.03
 .001
 1
 NIL
@@ -1004,7 +1004,7 @@ trad-init-cover
 trad-init-cover
 0
 1
-0.115
+0.15
 .005
 1
 NIL
@@ -1046,7 +1046,7 @@ smother-f
 smother-f
 0
 1
-0.5
+0.2
 .01
 1
 NIL
@@ -1086,7 +1086,7 @@ world-area
 world-area
 0
 50
-1.25
+1.0
 .25
 1
 ha
@@ -1144,7 +1144,7 @@ SWITCH
 202
 profile_setup
 profile_setup
-0
+1
 1
 -1000
 
