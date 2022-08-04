@@ -1,31 +1,31 @@
-extensions [profiler matrix rnd vid]
+extensions [profiler matrix rnd vid csv]
 __includes ["distributions.nls" "initialise.nls" "fileHandle.nls" "demographySetGet.nls" "demographyFuncs.nls" "helperFuncs.nls"]
 
 globals
 [
   ;; world dimensions
-  world-size-patches
+  world-size-patches ;; world-width * world-height defined in initialise.nls
 
   ;; text file names
-  demography-files
+  demography-files ;; NOT 100% how this works but should be defining the file with all the species info
 
   ;; various status variables
-  abundances
-  dbh-by-species
-  age-by-species
-  hgt-by-species
-  mean-age-by-species
-  mean-hgt-by-species
-  BA-by-species
+  abundances ;; How many of a species are present globally (I think) initiated in initialise.nls and the updated by update-abundances in demographySetGet.nls
+  dbh-by-species ;; Appears to be max dbh of each species Initialised in initialise.nls and then updated by update-species-dbh in demographySetGet.nls
+  age-by-species ;; Appears to be max age of each species Initialised in initialise.nls and then updated by update-species-age in demographySetGet.nls
+  hgt-by-species ;; Appears to be max height of each species Initialised in initialise.nls and then updated by update-species-hgt in demographySetGet.nls
+  mean-age-by-species ;;  Mean age for each species. Calculated identical to age-by-specie just updated by update-species-mean-age instead
+  mean-hgt-by-species ;;  Mean height for each species. Calculated identical to hgt-by-specie just updated by update-species-mean-hgt instead
+  BA-by-species ;; Bulk area (?). Calculated the same as above just updated with a unique equation in update-species-BA in demographySetGet.nls
 
-  colour-list
-  disturbFront
-  disturbedArea
-  spp-list
+  colour-list ;; List indicating the colour assocciated to each species. From demography file
+  disturbFront ;; Disturbance front (i.e. new cells to be added to disturbed cells) updated by disturb-spread in demongraphyFuncs.nls
+  disturbedArea ;; Total cells disturbed
+  spp-list ;; List of ID numbers for each species defined on initialisation
 
-  wgt-list
+  wgt-list ;; Weights list, a lookup list of the normal density for x from 0 to 1.0 used to compute the light env growth index much more quickly
 
-  ;;seedlings-saplings
+  ;;seedlings-saplings Set of lists defining the probabilities of survival and transition for younger trees (Seem to be defined in demography_newTFKR.txt)
   seedling-survival
   sapling-survival
   seedling-transition
@@ -33,8 +33,7 @@ globals
   sapling-mortality
 
 
-  ;; demography and species trait lists
-  ;;colour-list
+  ;; demography and species trait lists (Determines traits for each species) (Seem to be defined in demography_newTFKR.txt)
   max-hgt
   max-dbh
   max-age
@@ -45,29 +44,30 @@ globals
 
 
   ;; tree-fern parameters
-
-  a-tf-hgt
+  a-tf-hgt ;; Some hard coded values presumably affecting tree fern height but no idea where values originate
   b-tf-hgt
 
+  ;; All below variables seem to be defined in demography_newTFKR.txt
   shade-tolerance
   repro-height
   repro-age
   regen-height
-  seed-prod
+  seed-prod ;; Value which seems to define amount of seeds produced based on a Poisson distribution
   ldd-dispersal-frac
   ldd-dispersal-dist
   gap-maker
-  supp-tolerance
+  supp-tolerance ;; Suppression tolerance
   supp-mortality
   herbivory
   edge-response
   seedling-inhibition
-  external-species
+  external-species ;; Chance species can invade from outside plot (outside model?) use a binomial process with p = external-species and n = max of 1% of grid cells or 1 equal vs 2 current abundance
 
-  niche-breadth
-  max-shade-dist
+  ;; No longer from demography_newTFKR.txt
+  niche-breadth ;; Set as 0.3 in initialise.nls
+  max-shade-dist ;; Set as 32 in initialise.nls
 
-  ; initial conditions
+  ; initial conditions, seem to be defined by site-file (forest.txt)
   start-dbh
   start-dbh-sd
   seedlings-init
@@ -76,68 +76,74 @@ globals
   max-init-hgt
 
   ; restoration parameters
-  saplings-to-plant
+  saplings-to-plant ;; Appears to be a binary list corresponding to each species but unclear where it is from
 
   ; edge effect curve parameters
-  edge-b1
-  edge-b0
+  edge-b1 ;; Value of 1
+  edge-b0 ;; Value of 0 these seem extremely redundant
 
 
 ]
 
 patches-own
 [
-  edge-weight
+  edge-weight ;; Edginess of patch, which impacts the amount of edge penalty affecting trees on that patch
 
-  species
-  prev-spp
+  species ;; Think it is the ID of the species on that patch (NOT CERTAIN NEED TO ASK)
+  prev-spp ;; Think its a record of the previous species on the patch
 
-  nhbs
-  nhb-set
-  height
+  nhbs ;; Neighbourhood surrounding each patch?????
+  nhb-set ;; All patches contained in the neighbourhood of each patch??????
+  height ;; Height of species on patch
   prev-height
 
   dbh
   age
-  previous-growth  ; list of the competition dependent growth penalty from previous five ticks
+  previous-growth  ;; list of the competition dependent growth penalty from previous five ticks
 
-  nhb-height
+  nhb-height ;; Not sure what these two nhb measures are???
   nhb-light
 
   disturbed?
   expand?
 
-  last-change-tick
-  n-change
+  last-change-tick ;; Last tick in which a change occurred in a patch??
+  n-change ;; Number of species changes that have occurred on a patch??
 
-  seedlings
-  saplings
-  seedling-density
-  sapling-density
+  seedlings ;; List of number of seedlings for each species in a patch
+  saplings ;; List of number of saplings for each species in a patch
+  seedling-density ;; Total number of seedlings in each patch
+  sapling-density ;; Total number of saplings in each patch
 
   ; ground-cover weed parameters
-  trad-cover
-  trad-inv
+  trad-cover ;; proportion of weed cover in a patch
+  trad-inv ;; Tick at which weed spread to a patch???
 
   prop-ldd
 ]
 
 
 
-to profile
-      setup                  ;; set up the model
-      profiler:start         ;; start profiling
-      repeat 20 [ go ]       ;; run something you want to measure
-      profiler:stop          ;; stop profiling
-      print profiler:report  ;; view the results
-      profiler:reset         ;; clear the data
+to profile ;; Profile code using dedicated profile button
+  ifelse profile_setup = TRUE
+      [profiler:start
+       repeat 5 [setup]
+       profiler:stop]
+      [setup
+       profiler:start         ;; start profiling
+       repeat 50 [ go ]       ;; run something you want to measure
+       profiler:stop]          ;; stop profiling
+  ifelse save_profile = TRUE
+      [csv:to-file "profiler_data.csv" profiler:data] ;; Save results
+      [print profiler:report] ;; view the results
+  profiler:reset         ;; clear the data
 end
 
-
+;; NOTE `to setup` is contained in initialise.nls
 
 to go
 
-  if vid:recorder-status = "recording" [ vid:record-interface ]
+  if vid:recorder-status = "recording" [ vid:record-interface ] ;;Records the NetLogo interface view to the active recording.
 
     ;; Landscape-level disturbance?
     if disturbFreq > 0 [ lsp-disturbance ]
@@ -300,13 +306,13 @@ to build-sets
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-320
+331
 10
-903
-594
+859
+539
 -1
 -1
-4.0
+20.0
 1
 10
 1
@@ -317,9 +323,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-143
+25
 0
-143
+25
 1
 1
 1
@@ -327,9 +333,9 @@ ticks
 30.0
 
 BUTTON
-42
+3
 10
-111
+72
 43
 Setup
 setup
@@ -344,9 +350,9 @@ NIL
 1
 
 BUTTON
-121
+82
 11
-184
+145
 44
 Go
 go
@@ -361,9 +367,9 @@ NIL
 1
 
 BUTTON
-193
+154
 10
-263
+224
 43
 Step
 go
@@ -378,40 +384,40 @@ NIL
 1
 
 SLIDER
-1133
-13
-1305
-46
+1164
+10
+1336
+43
 disturbFreq
 disturbFreq
 0
 1
-0.0
+0.1
 .005
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1133
-51
-1305
-84
+1164
+48
+1336
+81
 maxDisturbSize
 maxDisturbSize
 0
 1
-1.0
+0.4
 .01
 1
 NIL
 HORIZONTAL
 
 SWITCH
-1308
-15
-1411
-48
+1339
+12
+1442
+45
 ddm
 ddm
 1
@@ -435,14 +441,14 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [nhb-light] of patches"
-"pen-1" 1.0 0 -7500403 true "" "plot min [nhb-light] of patches"
-"pen-2" 1.0 0 -7500403 true "" "plot max [nhb-light] of patches"
+"pen-1" 1.0 0 -955883 true "" "plot min [nhb-light] of patches"
+"pen-2" 1.0 0 -8630108 true "" "plot max [nhb-light] of patches"
 
 SWITCH
-1309
-51
-1434
-84
+1340
+48
+1465
+81
 turtle-trees?
 turtle-trees?
 1
@@ -450,10 +456,10 @@ turtle-trees?
 -1000
 
 SLIDER
-1134
-108
-1306
-141
+1165
+105
+1337
+138
 n-species
 n-species
 8
@@ -465,30 +471,30 @@ NIL
 HORIZONTAL
 
 SLIDER
-1135
-146
-1307
-179
+1166
+143
+1338
+176
 max-ticks
 max-ticks
 1000
 10000
-800.0
+1000.0
 250
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1133
-193
-1305
-226
+1164
+190
+1336
+223
 col-height
 col-height
 0
 35
-35.0
+6.5
 .25
 1
 NIL
@@ -513,10 +519,10 @@ PENS
 "default" 1.0 1 -16777216 true "" ""
 
 PLOT
-1136
-620
-1405
-836
+1167
+617
+1436
+833
 Age-DBH Relationship
 Age
 DBH
@@ -531,10 +537,10 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 TEXTBOX
-1169
-643
-1372
-665
+1200
+640
+1403
+662
 500 randomly selected patches, every 10 yr
 10
 0.0
@@ -551,10 +557,10 @@ Light field (0 [high] to low [1]); max, mean, min
 1
 
 SWITCH
-1313
-151
-1427
-184
+1344
+148
+1458
+181
 herbivory?
 herbivory?
 1
@@ -562,10 +568,10 @@ herbivory?
 -1000
 
 SWITCH
-1315
-186
-1448
-219
+1346
+183
+1479
+216
 edge-effects?
 edge-effects?
 1
@@ -613,17 +619,17 @@ planting-frequency
 planting-frequency
 1
 10
-8.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1142
-286
-1314
-319
+1173
+283
+1345
+316
 edge-b2
 edge-b2
 0
@@ -635,20 +641,20 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1136
-329
-1333
-371
+1167
+326
+1364
+368
 as edge-b2 increases distance over which edge-effect occurs reduces
 11
 0.0
 1
 
 PLOT
-1137
-472
-1337
-622
+1168
+469
+1368
+619
 Edge Curve
 Distance
 E(d)
@@ -663,13 +669,13 @@ PENS
 "default" 1.0 0 -16777216 true "" ""
 
 SWITCH
-975
-650
-1078
-683
+1006
+647
+1109
+680
 plot?
 plot?
-0
+1
 1
 -1000
 
@@ -696,10 +702,10 @@ forest.txt
 String
 
 MONITOR
-1136
-232
-1203
-277
+1167
+229
+1234
+274
 BA per ha
 ba-per-ha
 1
@@ -707,31 +713,31 @@ ba-per-ha
 11
 
 TEXTBOX
-1456
-96
-1538
-118
+1487
+93
+1569
+115
 Dispersal from\noutside the world
 9
 15.0
 1
 
 SWITCH
-1310
-94
-1443
-127
+1341
+91
+1474
+124
 external-rain?
 external-rain?
-0
+1
 1
 -1000
 
 MONITOR
-1203
-233
-1283
-278
+1234
+230
+1314
+275
 Biggest tree
 max [dbh] of patches
 3
@@ -774,10 +780,10 @@ PENS
 "pen-6" 1.0 0 -16110067 true "" "plot item 6 BA-by-species"
 
 MONITOR
-1283
-234
-1366
-279
+1314
+231
+1397
+276
 Mean tree size
 mean [dbh] of patches
 2
@@ -785,10 +791,10 @@ mean [dbh] of patches
 11
 
 MONITOR
-1369
-233
-1452
-278
+1400
+230
+1483
+275
 Median tree sizes
 median [dbh] of patches
 3
@@ -822,10 +828,10 @@ PENS
 "pen-8" 1.0 0 -8990512 true "" "plot item 7 abundances"
 
 SLIDER
-1138
-380
-1310
-413
+1169
+377
+1341
+410
 comp-multiplier
 comp-multiplier
 0
@@ -863,10 +869,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1406
-620
-1657
-836
+1437
+617
+1688
+833
 Age-hgt Relationship
 Age
 Height
@@ -881,20 +887,20 @@ PENS
 "default" 1.0 2 -16777216 true "" ""
 
 TEXTBOX
-1432
-643
-1582
-661
+1463
+640
+1613
+658
 500 randomly selected Tfs every 10 yr
 8
 0.0
 1
 
 PLOT
-1346
-411
-1650
-618
+1377
+408
+1681
+615
 Tree fern height structure
 NIL
 NIL
@@ -909,10 +915,10 @@ PENS
 "default" 1.0 1 -16777216 true "set-histogram-num-bars 20\nset-plot-y-range 0 2000" "if plot? and ticks mod 10 = 0\n[ histogram [height] of patches with [species = 7] ]"
 
 SLIDER
-1360
-352
-1532
-385
+1391
+349
+1563
+382
 macro-litter-effect
 macro-litter-effect
 0
@@ -924,10 +930,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-1364
-307
-1606
-349
+1395
+304
+1637
+346
 This is the elevated rate of sap mortality under life-form type 2 (tree-ferns, nikau, ...). It is prob of one sap being killed (pa).
 11
 0.0
@@ -953,7 +959,7 @@ trad-spread-local
 trad-spread-local
 0
 1
-0.0
+0.2
 .01
 1
 NIL
@@ -968,7 +974,7 @@ trad-spread-long
 trad-spread-long
 0
 .1
-1.0E-4
+0.03
 .001
 1
 NIL
@@ -998,7 +1004,7 @@ trad-init-cover
 trad-init-cover
 0
 1
-0.025
+0.15
 .005
 1
 NIL
@@ -1020,7 +1026,7 @@ BUTTON
 573
 845
 highlight-trad
-ask patches with [ trad-cover > 0 ]\n[set pcolor yellow]
+ask patches with [ trad-cover > 0 ]\n[set pcolor white]
 NIL
 1
 T
@@ -1040,27 +1046,27 @@ smother-f
 smother-f
 0
 1
-0.5
+0.2
 .01
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-941
-107
-1125
-152
+972
+104
+1156
+149
 ext-dispersal-scenario
 ext-dispersal-scenario
 "equal" "abundance"
 0
 
 SLIDER
-939
-65
-1123
-98
+970
+62
+1154
+95
 patch-grain
 patch-grain
 1
@@ -1072,19 +1078,75 @@ m
 HORIZONTAL
 
 SLIDER
-939
-26
-1122
-59
+970
+23
+1153
+56
 world-area
 world-area
 0
 50
-32.75
+1.0
 .25
 1
 ha
 HORIZONTAL
+
+BUTTON
+233
+10
+307
+43
+Step 10
+repeat 10 [go]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+973
+170
+1039
+203
+NIL
+profile
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SWITCH
+973
+204
+1097
+237
+save_profile
+save_profile
+1
+1
+-1000
+
+SWITCH
+1041
+169
+1155
+202
+profile_setup
+profile_setup
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1415,7 +1477,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -2421,6 +2483,25 @@ NetLogo 6.2.0
       <value value="&quot;equal&quot;"/>
       <value value="&quot;abundance&quot;"/>
     </enumeratedValueSet>
+  </experiment>
+  <experiment name="setup_scale_profile" repetitions="2" runMetricsEveryStep="true">
+    <setup>profiler:reset
+profiler:start
+       repeat 15 [setup]
+profiler:stop</setup>
+    <go>stop</go>
+    <metric>profiler:data</metric>
+    <steppedValueSet variable="world-area" first="2" step="2" last="40"/>
+  </experiment>
+  <experiment name="go_scale_profile" repetitions="1" runMetricsEveryStep="false">
+    <setup>profiler:reset
+setup
+profiler:start</setup>
+    <go>go</go>
+    <final>profiler:stop</final>
+    <timeLimit steps="2"/>
+    <metric>profiler:data</metric>
+    <steppedValueSet variable="world-area" first="2" step="2" last="40"/>
   </experiment>
 </experiments>
 @#$#@#$#@

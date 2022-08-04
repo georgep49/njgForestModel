@@ -1,0 +1,268 @@
+---
+title: "Impact of `world-size` on processing time of NRT model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(data.table)
+```
+
+# Setup
+
+```{r include=FALSE}
+setup_df <- fread("setup_scale_profile_results.csv")
+
+head(setup_df)
+```
+
+```{r include=FALSE}
+setup_df <- setup_df[, list(
+                            run_number,
+                            world,
+                            procedure,
+                            calls = calls/15,
+                            inclusive_time = (inclusive_time/1000)/15,
+                            exclusive_time = (exclusive_time/1000)/15
+                          )
+                     ]
+
+head(setup_df)
+```
+
+```{r include=FALSE}
+setup_summ <- setup_df[, list(
+                              m_calls = round(mean(calls)), 
+                              m_inclusive = mean(inclusive_time), 
+                              m_exclusive = mean(exclusive_time)
+                              ),
+                       by = list(world)
+                       ]
+head(setup_summ)
+```
+
+## Overall setup time
+
+```{r echo=FALSE}
+p1 <- ggplot(setup_summ,
+          aes(x = world)) +
+      geom_line(aes(y = m_exclusive),
+                color = "blue", size=1) +
+      geom_line(aes(y = m_inclusive),
+                color = "orange", size=1) +
+      
+      geom_point(aes(y = m_exclusive),
+                color = "blue", size=2) +
+      geom_point(aes(y = m_inclusive),
+                color = "orange", size=2) +
+      
+      theme_classic() + 
+      ylab("Run time (s)") +
+      xlab("World size")
+  
+
+p2 <- ggplot(setup_summ,
+           aes(x = world, y = m_calls)) +
+      geom_line() +
+        geom_point() +
+      theme_classic() + 
+      theme(axis.title=element_text(size=8)) +
+      ylab("Number of function calls") +
+      xlab("World size")
+
+p1 + annotation_custom(ggplotGrob(p2),
+                       xmin = 3,
+                       xmax = 20,
+                       ymin = 1000000,
+                       ymax = 2000000)
+```
+
+## Setup time of slowest 5 procedures
+
+```{r include=FALSE}
+proc_summ <- setup_df[, list(
+                              m_calls = round(mean(calls)), 
+                              m_inclusive = mean(inclusive_time), 
+                              m_exclusive = mean(exclusive_time)
+                              ),
+                       by = list(procedure)
+                       ]
+
+head(proc_summ[order(-m_exclusive),])
+```
+
+```{r include=FALSE}
+procs <- list("RND-ROULETTE", "GET-AGE-FROM-DBH", "BUILD-SETS",
+              "RANDOM-LOGNORMAL", "READ-PARAMS-LIST-FROM-FILE", "GET-NHB-HEIGHT")
+proc_slow <- setup_df[procedure %in% procs, 
+                      list(
+                              m_calls = round(mean(calls)), 
+                              m_inclusive = mean(inclusive_time), 
+                              m_exclusive = mean(exclusive_time)
+                              ),
+                       by = list(procedure, world)
+                       ]
+
+head(proc_slow)
+```
+
+```{r echo=FALSE}
+p1 <- ggplot(proc_slow,
+          aes(x = world, color = procedure)) +
+      geom_line(aes(y = m_exclusive),size=1) +
+      geom_point(aes(y = m_exclusive),size=2) +
+
+      theme_classic() +
+      theme(legend.text = element_text(size=6),
+            legend.key.size = unit(0.2, 'cm'),
+            legend.title=element_blank()) +
+      ylab("Run time (s)") +
+      xlab("World size")
+
+p2 <- ggplot(proc_slow,
+           aes(x = world, y = m_calls, color = procedure)) +
+      geom_line() +
+      geom_jitter(width = 2) +
+      theme_classic() +
+      theme(axis.title=element_text(size=8),
+            legend.position="none") +
+      ylab("Number of function calls") +
+      xlab("World size")
+
+p1 + annotation_custom(ggplotGrob(p2),
+                       xmin = 2,
+                       xmax = 32,
+                       ymin = 51000000000,
+                       ymax = 140000000000)
+```
+
+------------------------------------------------------------------------
+
+# Go
+
+```{r include=FALSE}
+go_df <- fread("go_scale_profile_results_v2.csv")
+
+head(go_df)
+```
+
+```{r include=FALSE}
+go_df <- go_df[, list(
+                      run_number,
+                      world,
+                      step,
+                      procedure,
+                      calls = calls/3,
+                      inclusive_time = (inclusive_time/1000)/3,
+                      exclusive_time = (exclusive_time/1000)/3
+                      )
+                 ]
+
+head(go_df)
+```
+
+```{r include=FALSE}
+go_summ <- go_df[, list(
+                        m_calls = round(mean(calls)), 
+                        m_inclusive = mean(inclusive_time), 
+                        m_exclusive = mean(exclusive_time)
+                        ),
+                 by = list(world)
+                 ]
+head(go_summ)
+```
+
+## Overall go time
+
+```{r echo=FALSE}
+p1 <- ggplot(go_summ,
+          aes(x = world)) +
+      geom_line(aes(y = m_exclusive),
+                color = "blue", size=1) +
+      geom_line(aes(y = m_inclusive),
+                color = "orange", size=1) +
+      
+      geom_point(aes(y = m_exclusive),
+                color = "blue", size=2) +
+      geom_point(aes(y = m_inclusive),
+                color = "orange", size=2) +
+      
+      theme_classic() + 
+      ylab("Run time (s)") +
+      xlab("World size")
+  
+
+p2 <- ggplot(go_summ,
+           aes(x = world, y = m_calls)) +
+      geom_line() +
+        geom_point() +
+      theme_classic() + 
+      theme(axis.title=element_text(size=8)) +
+      ylab("Number of function calls") +
+      xlab("World size")
+
+p1 + annotation_custom(ggplotGrob(p2),
+                       xmin = 1,
+                       xmax = 10.5,
+                       ymin = 48500,
+                       ymax = 85000)
+```
+
+## Go time of slowest 5 procedures
+
+```{r include=FALSE}
+go_proc_summ <- go_df[, list(
+                              m_calls = round(mean(calls)), 
+                              m_inclusive = mean(inclusive_time), 
+                              m_exclusive = mean(exclusive_time)
+                              ),
+                       by = list(procedure)
+                       ]
+
+head(go_proc_summ[order(-m_exclusive),])
+```
+
+```{r include=FALSE}
+procs <- list("GET-NHB-HEIGHT", "RANDOM-BINOMIAL", "GROW",
+              "REGENERATE-PATCH-BANK", "GO", "NHB-DISPERSAL")
+go_proc_slow <- go_df[procedure %in% procs, 
+                      list(
+                              m_calls = round(mean(calls)), 
+                              m_inclusive = mean(inclusive_time), 
+                              m_exclusive = mean(exclusive_time)
+                              ),
+                       by = list(procedure, world)
+                       ]
+
+head(go_proc_slow)
+```
+
+```{r echo=FALSE}
+p1 <- ggplot(go_proc_slow,
+          aes(x = world, color = procedure)) +
+      geom_line(aes(y = m_exclusive),size=1) +
+      geom_point(aes(y = m_exclusive),size=2) +
+
+      theme_classic() +
+      theme(legend.text = element_text(size=6),
+            legend.key.size = unit(0.2, 'cm'),
+            legend.title=element_blank()) +
+      ylab("Run time (s)") +
+      xlab("World size")
+
+p2 <- ggplot(go_proc_slow,
+           aes(x = world, y = m_calls, color = procedure)) +
+      geom_line() +
+      geom_jitter(width = 2) +
+      theme_classic() +
+      theme(axis.title=element_text(size=7),
+            legend.position="none") +
+      ylab("Number of function calls") +
+      xlab("World size")
+
+p1 + annotation_custom(ggplotGrob(p2),
+                       xmin = 0,
+                       xmax = 12.45,
+                       ymin = 420000,
+                       ymax = 650000)
+```

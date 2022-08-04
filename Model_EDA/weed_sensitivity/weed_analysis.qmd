@@ -1,0 +1,793 @@
+---
+title: "Weed analysis"
+author: "Craig Simpkins"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| label: load-data
+#| include: false
+
+library(tidyverse)
+library(data.table)
+library(wesanderson)
+library(ggpubr)
+
+distinct <- data.table::fread("weed_impact_distinct_wide.csv")
+ff <- data.table::fread("weed_sensitivity_ff_wide.csv")
+```
+
+```{r}
+#| label: lengthen dataframes
+#| include: false
+
+distinct_long <- distinct %>% 
+  pivot_longer(
+    cols = BA_tawa:abundance_kanuka,
+    names_to = c(".value", "species"),
+    names_pattern = "(.*)_(.*)"
+  )
+
+ff_long <- ff %>% 
+  pivot_longer(
+    cols = BA_tawa:abundance_kanuka,
+    names_to = c(".value", "species"),
+    names_pattern = "(.*)_(.*)"
+  )
+
+distinct_long <- data.table(distinct_long)
+ff_long <- data.table(ff_long)
+```
+
+```{r}
+#| label: summarise data
+#| include: false
+
+## Note we remove BA here as it is always 0 due to critical code being
+## commented out in the Netlogo model itself
+
+distinct_summary <- distinct_long[, 
+                                  list(mean_age = mean(age),
+                                  mean_dbh = mean(dbh),
+                                  mean_hgt = mean(hgt),
+                                  mean_abundance = mean(abundance)),
+                                  by = list(ground_weeds, step, species)
+                                  ]
+
+ff_summary <- ff_long[, 
+                      list(mean_age = mean(age),
+                      mean_dbh = mean(dbh),
+                      mean_hgt = mean(hgt),
+                      mean_abundance = mean(abundance)),
+                      by = list(trad_init_cover,
+                                smother_f,
+                                trad_spread_local,
+                                trad_spread_long,
+                                trad_growth,
+                                step, 
+                                species)
+                      ]
+```
+
+## Impact of weeds
+
+Ran model for 1000 steps for 15 repeats with ground weeds on and off. Weed parameters were randomly selected based on initial settings and only testing the clustered scenario. The parameter values were:
+
+-   trad-init-cover = 0.150
+-   trad-spread-local = 0.20
+-   trad-spread-long = 0.025
+-   trad-growth = 1.0
+-   smother-f = 0.20
+
+```{r}
+#| label: plot distinct changes
+#| fig-cap: Composition measures for each species taken at 1000 time steps (years) with and with out ground weed cover, presented as the mean of the 15 model repeats.
+#| echo: false
+
+distinct_summary$species <- factor(distinct_summary$species,
+                                   levels = c("tawa",
+                                              "pigeon",
+                                              "pukatea",
+                                              "kawakawa",
+                                              "mahoe",
+                                              "rimu",
+                                              "ponga",
+                                              "kanuka"))
+
+
+
+abundance <- ggplot(distinct_summary[step == 100], 
+                    aes(fill=ground_weeds, x = species, y = mean_abundance)) + 
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) + 
+  theme_classic() +
+  xlab("Species") +
+  ylab("Mean abundance")
+
+age <- ggplot(distinct_summary[step == 100], 
+              aes(fill=ground_weeds, x = species, y = mean_age)) + 
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) + 
+  theme_classic() +
+  xlab("Species") +
+  ylab("Mean age")
+
+dbh <- ggplot(distinct_summary[step == 100], 
+              aes(fill=ground_weeds, x = species, y = mean_dbh)) + 
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) + 
+  theme_classic() +
+  xlab("Species") +
+  ylab("Mean DBH")
+
+hgt <- ggplot(distinct_summary[step == 100], 
+              aes(fill=ground_weeds, x = species, y = mean_hgt)) + 
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) + 
+  theme_classic() +
+  xlab("Species") +
+  ylab("Mean height")
+
+
+ggarrange(abundance + rremove("x.text") + rremove("xlab"), 
+          dbh + rremove("x.text") + rremove("xlab"), 
+          hgt + theme(axis.text.x = element_text(angle = 20)), 
+          age + theme(axis.text.x = element_text(angle = 20)), 
+          common.legend = TRUE,
+          ncol = 2, nrow = 2)
+```
+
+## Impact of weed parameters (i.e. sensitivity)
+
+Sensitivity analysis model runs were run for 1000 steps, repeated six times (due to time constraints) for every parameter value combination. Note that parameter values were altered by 100% above and below baseline levels, e.g., if baseline was 0.5 runs were conducted at 0 and 1. This high degree of change was done to allow for analysis of impact of extreme changes in addition to sensitivity.
+
+```{r}
+#| label: subset data for sensitivity
+#| include: false
+
+## Man this is dirty sure there is a better way
+## Baseline
+ff_baseline <- ff_summary[trad_init_cover == 0.5 &
+                            smother_f == 0.5 &
+                            trad_spread_local == 0.5 &
+                            trad_spread_long == 0.5 &
+                            trad_growth == 1.25]
+
+## Initial cover
+ff_init_cov_up <- ff_summary[trad_init_cover == 1 &
+                               smother_f == 0.5 &
+                               trad_spread_local == 0.5 &
+                               trad_spread_long == 0.5 &
+                               trad_growth == 1.25]
+
+ff_init_cov_down <- ff_summary[trad_init_cover == 0 &
+                                 smother_f == 0.5 &
+                                 trad_spread_local == 0.5 &
+                                 trad_spread_long == 0.5 &
+                                 trad_growth == 1.25]
+
+## Smother f
+ff_smother_up <- ff_summary[trad_init_cover == 0.5 &
+                              smother_f == 1 &
+                              trad_spread_local == 0.5 &
+                              trad_spread_long == 0.5 &
+                              trad_growth == 1.25]
+
+ff_smother_down <- ff_summary[trad_init_cover == 0.5 &
+                                smother_f == 0 &
+                                trad_spread_local == 0.5 &
+                                trad_spread_long == 0.5 &
+                                trad_growth == 1.25]
+
+## Spread local
+ff_spread_local_up <- ff_summary[trad_init_cover == 0.5 &
+                                   smother_f == 0.5 &
+                                   trad_spread_local == 1 &
+                                   trad_spread_long == 0.5 &
+                                   trad_growth == 1.25]
+
+ff_spread_local_down <- ff_summary[trad_init_cover == 0.5 &
+                                     smother_f == 0.5 &
+                                     trad_spread_local == 0 &
+                                     trad_spread_long == 0.5 &
+                                     trad_growth == 1.25]
+
+## Spread long
+ff_spread_long_up <- ff_summary[trad_init_cover == 0.5 &
+                                  smother_f == 0.5 &
+                                  trad_spread_local == 0.5 &
+                                  trad_spread_long == 1 &
+                                  trad_growth == 1.25]
+
+ff_spread_long_down <- ff_summary[trad_init_cover == 0.5 &
+                                    smother_f == 0.5 &
+                                    trad_spread_local == 0.5 &
+                                    trad_spread_long == 0 &
+                                    trad_growth == 1.25]
+
+## Growth
+ff_growth_up <- ff_summary[trad_init_cover == 0.5 &
+                             smother_f == 0.5 &
+                             trad_spread_local == 0.5 &
+                             trad_spread_long == 0.5 &
+                             trad_growth == 2.5]
+
+ff_growth_down <- ff_summary[trad_init_cover == 0.5 &
+                               smother_f == 0.5 &
+                               trad_spread_local == 0.5 &
+                               trad_spread_long == 0.5 &
+                               trad_growth == 0]
+```
+
+```{r}
+#| label: create sensitivity calculation function
+#| include: false
+
+calc_hamby <- function(y, x, base_y, base_x){
+  
+  delta_y <- abs(y - base_y)
+  delta_x <- abs(x - base_x)
+  
+  sens <- (delta_y/base_y)/(delta_x/base_x)
+  
+  sens[is.nan(sens)] <- 0
+  sens[is.infinite(sens)] <- 0
+  return(sens)
+}
+```
+
+```{r}
+#| label: calculate sensitivity
+#| include: false
+
+## Baseline just to allow join
+ff_baseline$ab_hamby <- calc_hamby(ff_baseline$mean_abundance,
+                                ff_baseline$trad_init_cover,
+                                ff_baseline$mean_abundance,
+                                ff_baseline$trad_init_cover)
+
+ff_baseline$dbh_hamby <- calc_hamby(ff_baseline$mean_dbh,
+                                ff_baseline$trad_init_cover,
+                                ff_baseline$mean_dbh,
+                                ff_baseline$trad_init_cover)
+
+ff_baseline$hgt_hamby <- calc_hamby(ff_baseline$mean_hgt,
+                                ff_baseline$trad_init_cover,
+                                ff_baseline$mean_hgt,
+                                ff_baseline$trad_init_cover)
+
+ff_baseline$age_hamby <- calc_hamby(ff_baseline$mean_age,
+                                ff_baseline$trad_init_cover,
+                                ff_baseline$mean_age,
+                                ff_baseline$trad_init_cover)
+
+## Initial cover
+## Increase
+ff_init_cov_up$ab_hamby <- calc_hamby(ff_init_cov_up$mean_abundance,
+                                   ff_init_cov_up$trad_init_cover,
+                                   ff_baseline$mean_abundance,
+                                   ff_baseline$trad_init_cover)
+
+ff_init_cov_up$dbh_hamby <- calc_hamby(ff_init_cov_up$mean_dbh,
+                                   ff_init_cov_up$trad_init_cover,
+                                   ff_baseline$mean_dbh,
+                                   ff_baseline$trad_init_cover)
+
+ff_init_cov_up$hgt_hamby <- calc_hamby(ff_init_cov_up$mean_hgt,
+                                   ff_init_cov_up$trad_init_cover,
+                                   ff_baseline$mean_hgt,
+                                   ff_baseline$trad_init_cover)
+
+ff_init_cov_up$age_hamby <- calc_hamby(ff_init_cov_up$mean_age,
+                                   ff_init_cov_up$trad_init_cover,
+                                   ff_baseline$mean_age,
+                                   ff_baseline$trad_init_cover)
+
+## Decrease
+ff_init_cov_down$ab_hamby <- calc_hamby(ff_init_cov_down$mean_abundance,
+                                     ff_init_cov_down$trad_init_cover,
+                                     ff_baseline$mean_abundance,
+                                     ff_baseline$trad_init_cover)
+
+ff_init_cov_down$dbh_hamby <- calc_hamby(ff_init_cov_down$mean_dbh,
+                                     ff_init_cov_down$trad_init_cover,
+                                     ff_baseline$mean_dbh,
+                                     ff_baseline$trad_init_cover)
+
+ff_init_cov_down$hgt_hamby <- calc_hamby(ff_init_cov_down$mean_hgt,
+                                     ff_init_cov_down$trad_init_cover,
+                                     ff_baseline$mean_hgt,
+                                     ff_baseline$trad_init_cover)
+
+ff_init_cov_down$age_hamby <- calc_hamby(ff_init_cov_down$mean_age,
+                                     ff_init_cov_down$trad_init_cover,
+                                     ff_baseline$mean_age,
+                                     ff_baseline$trad_init_cover)
+
+## Smother f
+## Increase
+ff_smother_up$ab_hamby <- calc_hamby(ff_smother_up$mean_abundance,
+                                  ff_smother_up$smother_f,
+                                  ff_baseline$mean_abundance,
+                                  ff_baseline$trad_init_cover)
+
+ff_smother_up$dbh_hamby <- calc_hamby(ff_smother_up$mean_dbh,
+                                  ff_smother_up$smother_f,
+                                  ff_baseline$mean_dbh,
+                                  ff_baseline$trad_init_cover)
+
+ff_smother_up$hgt_hamby <- calc_hamby(ff_smother_up$mean_hgt,
+                                  ff_smother_up$smother_f,
+                                  ff_baseline$mean_hgt,
+                                  ff_baseline$trad_init_cover)
+
+ff_smother_up$age_hamby <- calc_hamby(ff_smother_up$mean_age,
+                                  ff_smother_up$smother_f,
+                                  ff_baseline$mean_age,
+                                  ff_baseline$trad_init_cover)
+
+## Decrease
+ff_smother_down$ab_hamby <- calc_hamby(ff_smother_down$mean_abundance,
+                                    ff_smother_down$smother_f,
+                                    ff_baseline$mean_abundance,
+                                    ff_baseline$trad_init_cover)
+
+ff_smother_down$dbh_hamby <- calc_hamby(ff_smother_down$mean_dbh,
+                                    ff_smother_down$smother_f,
+                                    ff_baseline$mean_dbh,
+                                    ff_baseline$trad_init_cover)
+
+ff_smother_down$hgt_hamby <- calc_hamby(ff_smother_down$mean_hgt,
+                                    ff_smother_down$smother_f,
+                                    ff_baseline$mean_hgt,
+                                    ff_baseline$trad_init_cover)
+
+ff_smother_down$age_hamby <- calc_hamby(ff_smother_down$mean_age,
+                                    ff_smother_down$smother_f,
+                                    ff_baseline$mean_age,
+                                    ff_baseline$trad_init_cover)
+
+## Spread local
+## Increase
+ff_spread_local_up$ab_hamby <- calc_hamby(ff_spread_local_up$mean_abundance,
+                                       ff_spread_local_up$trad_spread_local,
+                                       ff_baseline$mean_abundance,
+                                       ff_baseline$trad_init_cover)
+
+ff_spread_local_up$dbh_hamby <- calc_hamby(ff_spread_local_up$mean_dbh,
+                                       ff_spread_local_up$trad_spread_local,
+                                       ff_baseline$mean_dbh,
+                                       ff_baseline$trad_init_cover)
+
+ff_spread_local_up$hgt_hamby <- calc_hamby(ff_spread_local_up$mean_hgt,
+                                       ff_spread_local_up$trad_spread_local,
+                                       ff_baseline$mean_hgt,
+                                       ff_baseline$trad_init_cover)
+
+ff_spread_local_up$age_hamby <- calc_hamby(ff_spread_local_up$mean_age,
+                                       ff_spread_local_up$trad_spread_local,
+                                       ff_baseline$mean_age,
+                                       ff_baseline$trad_init_cover)
+
+## Decrease
+ff_spread_local_down$ab_hamby <- calc_hamby(ff_spread_local_down$mean_abundance,
+                                         ff_spread_local_down$trad_spread_local,
+                                         ff_baseline$mean_abundance,
+                                         ff_baseline$trad_init_cover)
+
+ff_spread_local_down$dbh_hamby <- calc_hamby(ff_spread_local_down$mean_dbh,
+                                         ff_spread_local_down$trad_spread_local,
+                                         ff_baseline$mean_dbh,
+                                         ff_baseline$trad_init_cover)
+
+ff_spread_local_down$hgt_hamby <- calc_hamby(ff_spread_local_down$mean_hgt,
+                                         ff_spread_local_down$trad_spread_local,
+                                         ff_baseline$mean_hgt,
+                                         ff_baseline$trad_init_cover)
+
+ff_spread_local_down$age_hamby <- calc_hamby(ff_spread_local_down$mean_age,
+                                         ff_spread_local_down$trad_spread_local,
+                                         ff_baseline$mean_age,
+                                         ff_baseline$trad_init_cover)
+
+## Spread long
+## Increase
+ff_spread_long_up$ab_hamby <- calc_hamby(ff_spread_long_up$mean_abundance,
+                                      ff_spread_long_up$trad_spread_long,
+                                      ff_baseline$mean_abundance,
+                                      ff_baseline$trad_init_cover)
+
+ff_spread_long_up$dbh_hamby <- calc_hamby(ff_spread_long_up$mean_dbh,
+                                      ff_spread_long_up$trad_spread_long,
+                                      ff_baseline$mean_dbh,
+                                      ff_baseline$trad_init_cover)
+
+ff_spread_long_up$hgt_hamby <- calc_hamby(ff_spread_long_up$mean_hgt,
+                                      ff_spread_long_up$trad_spread_long,
+                                      ff_baseline$mean_hgt,
+                                      ff_baseline$trad_init_cover)
+
+ff_spread_long_up$age_hamby <- calc_hamby(ff_spread_long_up$mean_age,
+                                      ff_spread_long_up$trad_spread_long,
+                                      ff_baseline$mean_age,
+                                      ff_baseline$trad_init_cover)
+
+## Decrease
+ff_spread_long_down$ab_hamby <- calc_hamby(ff_spread_long_down$mean_abundance,
+                                        ff_spread_long_down$trad_spread_long,
+                                        ff_baseline$mean_abundance,
+                                        ff_baseline$trad_init_cover)
+
+ff_spread_long_down$dbh_hamby <- calc_hamby(ff_spread_long_down$mean_dbh,
+                                        ff_spread_long_down$trad_spread_long,
+                                        ff_baseline$mean_dbh,
+                                        ff_baseline$trad_init_cover)
+
+ff_spread_long_down$hgt_hamby <- calc_hamby(ff_spread_long_down$mean_hgt,
+                                        ff_spread_long_down$trad_spread_long,
+                                        ff_baseline$mean_hgt,
+                                        ff_baseline$trad_init_cover)
+
+ff_spread_long_down$age_hamby <- calc_hamby(ff_spread_long_down$mean_age,
+                                        ff_spread_long_down$trad_spread_long,
+                                        ff_baseline$mean_age,
+                                        ff_baseline$trad_init_cover)
+
+## Growth
+## Increase
+ff_growth_up$ab_hamby <- calc_hamby(ff_growth_up$mean_abundance,
+                                 ff_growth_up$trad_growth,
+                                 ff_baseline$mean_abundance,
+                                 ff_baseline$trad_init_cover)
+
+ff_growth_up$dbh_hamby <- calc_hamby(ff_growth_up$mean_dbh,
+                                 ff_growth_up$trad_growth,
+                                 ff_baseline$mean_dbh,
+                                 ff_baseline$trad_init_cover)
+
+ff_growth_up$hgt_hamby <- calc_hamby(ff_growth_up$mean_hgt,
+                                 ff_growth_up$trad_growth,
+                                 ff_baseline$mean_hgt,
+                                 ff_baseline$trad_init_cover)
+
+ff_growth_up$age_hamby <- calc_hamby(ff_growth_up$mean_age,
+                                 ff_growth_up$trad_growth,
+                                 ff_baseline$mean_age,
+                                 ff_baseline$trad_init_cover)
+
+## Decrease
+ff_growth_down$ab_hamby <- calc_hamby(ff_growth_down$mean_abundance,
+                                   ff_growth_down$trad_growth,
+                                   ff_baseline$mean_abundance,
+                                   ff_baseline$trad_init_cover)
+
+ff_growth_down$dbh_hamby <- calc_hamby(ff_growth_down$mean_dbh,
+                                   ff_growth_down$trad_growth,
+                                   ff_baseline$mean_dbh,
+                                   ff_baseline$trad_init_cover)
+
+ff_growth_down$hgt_hamby <- calc_hamby(ff_growth_down$mean_hgt,
+                                   ff_growth_down$trad_growth,
+                                   ff_baseline$mean_hgt,
+                                   ff_baseline$trad_init_cover)
+
+ff_growth_down$age_hamby <- calc_hamby(ff_growth_down$mean_age,
+                                   ff_growth_down$trad_growth,
+                                   ff_baseline$mean_age,
+                                   ff_baseline$trad_init_cover)
+
+
+## Combine back together
+sensitivity_DT <- rbindlist(list(ff_baseline,
+                                 ff_init_cov_up,
+                                 ff_init_cov_down,
+                                 ff_smother_up,
+                                 ff_smother_down,
+                                 ff_spread_local_up,
+                                 ff_spread_local_down,
+                                 ff_spread_long_up,
+                                 ff_spread_long_down,
+                                 ff_growth_up,
+                                 ff_growth_down))
+
+```
+
+```{r}
+#| label: format sensitivity
+#| echo: false
+
+var_name_list <- list("baseline",
+                      "cover", "cover",
+                      "smother", "smother",
+                      "spread_local", "spread_local",
+                      "LDD", "LDD",
+                      "growth", "growth")
+
+change_dir_list <- c("none",rep(list("increase","decrease"), 5))
+
+sensitivity_DT$focus_parameter <- unlist(rep(var_name_list, each=80))
+sensitivity_DT$direction <- unlist(rep(change_dir_list, each=80))
+
+sensitivity_DT[ab_hamby > 3]$ab_hamby <- 3
+sensitivity_DT[dbh_hamby > 3]$dbh_hamby <- 3
+sensitivity_DT[hgt_hamby > 3]$hgt_hamby <- 3
+sensitivity_DT[age_hamby > 3]$age_hamby <- 3
+```
+
+```{r}
+#| label: plot sensitivities
+#| echo: false
+
+plot_data <- sensitivity_DT[focus_parameter != "baseline" &
+                              step == 1000]
+
+ab <- ggplot(plot_data, aes(x = focus_parameter, 
+                            y = ab_hamby,
+                            fill = direction)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_dotplot(binaxis='y', 
+               stackdir='center',
+               position=position_dodge(0.8),
+               dotsize = 0.5,
+               binwidth = 1/11,
+               fill = "black",
+               aes(colour = direction)) +
+  geom_hline(yintercept = 1,
+             linetype="dashed", 
+             color = "darkgray") +
+  theme_classic() +
+  ylab("Hamby sensitivity index") +
+  xlab("Adjusted parameter") + 
+  #labs(fill = "Direction of \nchange") + 
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) +
+  scale_color_manual(values = c("black", "black")) + 
+  guides(color = "none")
+
+dbh <- ggplot(plot_data, aes(x = focus_parameter, 
+                             y = dbh_hamby,
+                             fill = direction)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_dotplot(binaxis='y', 
+               stackdir='center',
+               position=position_dodge(0.8),
+               dotsize = 0.5,
+               binwidth = 1/30,
+               fill = "black",
+               aes(colour = direction)) +
+  geom_hline(yintercept = 1,
+             linetype="dashed", 
+             color = "darkgray") +
+  theme_classic() +
+  ylab("Hamby sensitivity index") +
+  xlab("Adjusted parameter") + 
+  #labs(fill = "Direction of \nchange") + 
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) +
+  scale_color_manual(values = c("black", "black")) + 
+  guides(color = "none")
+
+hgt <- ggplot(plot_data, aes(x = focus_parameter, 
+                             y = hgt_hamby,
+                             fill = direction)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_dotplot(binaxis='y', 
+               stackdir='center',
+               position=position_dodge(0.8),
+               dotsize = 0.5,
+               binwidth = 1/30,
+               fill = "black",
+               aes(colour = direction)) +
+  geom_hline(yintercept = 1,
+             linetype="dashed", 
+             color = "darkgray") +
+  theme_classic() +
+  ylab("Hamby sensitivity index") +
+  xlab("Adjusted parameter") + 
+  #labs(fill = "Direction of \nchange") + 
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) +
+  scale_color_manual(values = c("black", "black")) + 
+  guides(color = "none")
+
+age <- ggplot(plot_data, aes(x = focus_parameter, 
+                             y = age_hamby,
+                             fill = direction)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_dotplot(binaxis='y', 
+               stackdir='center',
+               position=position_dodge(0.8),
+               dotsize = 0.5,
+               binwidth = 1/30,
+               fill = "black",
+               aes(colour = direction)) +
+  geom_hline(yintercept = 1,
+             linetype="dashed", 
+             color = "darkgray") +
+  theme_classic() +
+  ylab("Hamby sensitivity index") +
+  xlab("Adjusted parameter") + 
+  #labs(fill = "Direction of \nchange") + 
+  scale_fill_manual(values = c("#46ACC8", "#E58601")) +
+  scale_color_manual(values = c("black", "black")) + 
+  guides(color = "none")
+```
+
+::: panel-tabset
+## Abundance
+
+```{r}
+#| label: plot abundance
+#| echo: false
+
+ab
+```
+
+## DBH
+
+```{r}
+#| label: plot dbh
+#| echo: false
+
+dbh
+```
+
+## Height
+
+```{r}
+#| label: plot hgt
+#| echo: false
+
+hgt
+```
+
+## Age
+
+```{r}
+#| label: plot age
+#| echo: false
+
+age
+```
+:::
+
+## Resilience to extreme parameter values
+
+Selected the parameter settings which had the largest percentage change compared to the no ground weed runs.
+
+```{r}
+#| label: analyse extremes
+#| echo: false
+
+prop_diff <- function(alter, base){
+  return((abs(base - alter)/base) * 100)
+}
+
+extremes_sum <- ff_summary[step == 1000,
+                           list(mean_abundance,
+                                mean_dbh,
+                                mean_hgt,
+                                mean_age),
+                           list(trad_init_cover,
+                                smother_f,
+                                trad_spread_local,
+                                trad_spread_long,
+                                trad_growth,
+                                species)]
+
+no_weeds <- distinct_summary[step == 1000 & ground_weeds == FALSE,
+                             list(base_abundance = mean_abundance,
+                                  base_dbh = mean_dbh,
+                                  base_hgt = mean_hgt,
+                                  base_age = mean_age),
+                             list(species)]
+
+extremes_sum <- merge.data.table(extremes_sum, no_weeds,
+                                 by.x = "species", by.y = "species")
+
+extremes_sum <- extremes_sum[, 
+                             list(trad_init_cover,
+                                  smother_f,
+                                  trad_spread_local,
+                                  trad_spread_long,
+                                  trad_growth,
+                                  species,
+                                  abun_diff = mean_abundance - base_abundance,
+                                  dbh_diff = mean_dbh - base_dbh,
+                                  hgt_diff = mean_hgt - base_hgt,
+                                  age_diff = mean_age - base_age,
+                                  abun_per = prop_diff(mean_abundance, 
+                                                       base_abundance),
+                                  dbh_per = prop_diff(mean_dbh,
+                                                      base_dbh),
+                                  hgt_per = prop_diff(mean_hgt,
+                                                      base_hgt),
+                                  age_per = prop_diff(mean_age,
+                                                      base_age))]
+
+
+ex_abun <- extremes_sum %>% 
+  group_by(species) %>% 
+  slice_max(abun_per, n = 1, with_ties = FALSE) %>% 
+  select(trad_init_cover,
+         smother_f,
+         trad_spread_local,
+         trad_spread_long,
+         trad_growth,
+         species,
+         abun_diff,
+         abun_per)
+
+ex_dbh <- extremes_sum %>% 
+  group_by(species) %>% 
+  slice_max(dbh_per, n = 1, with_ties = FALSE) %>% 
+  select(trad_init_cover,
+         smother_f,
+         trad_spread_local,
+         trad_spread_long,
+         trad_growth,
+         species,
+         dbh_diff,
+         dbh_per)
+
+ex_hgt <- extremes_sum %>% 
+  group_by(species) %>% 
+  slice_max(hgt_per, n = 1, with_ties = FALSE) %>% 
+  select(trad_init_cover,
+         smother_f,
+         trad_spread_local,
+         trad_spread_long,
+         trad_growth,
+         species,
+         hgt_diff,
+         hgt_per)
+
+ex_age <- extremes_sum %>% 
+  group_by(species) %>% 
+  slice_max(age_per, n = 1, with_ties = FALSE) %>% 
+  select(trad_init_cover,
+         smother_f,
+         trad_spread_local,
+         trad_spread_long,
+         trad_growth,
+         species,
+         age_diff,
+         age_per)
+```
+
+::: panel-tabset
+## Abundance
+
+```{r}
+#| label: abundance extremes table
+#| echo: false
+
+library(knitr)
+kable(ex_abun)
+```
+
+## DBH
+
+```{r}
+#| label: dbh extremes table
+#| echo: false
+
+kable(ex_dbh)
+```
+
+## Height
+
+```{r}
+#| label: height extremes table
+#| echo: false
+
+kable(ex_hgt)
+```
+
+## Age
+
+```{r}
+#| label: age extremes table
+#| echo: false
+
+kable(ex_age)
+```
+:::

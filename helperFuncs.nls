@@ -57,7 +57,7 @@ end
 to-report rnd-roulette [values probabilities]
 
   let pairs (map list values probabilities)
-  let state first rnd:weighted-one-of-list pairs [[p] -> last p]
+  let state first rnd:weighted-one-of-list pairs [[p] -> last p] 
 
   report state
 end
